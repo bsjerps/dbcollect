@@ -11,7 +11,7 @@ def sqlplus_status(args, sid, orahome, connectstring):
         timeout = None
 
     proc     = sqlplus(orahome, sid, connectstring, '/tmp', timeout=timeout)
-    out, err = proc.communicate('WHENEVER SQLERROR EXIT SQL.SQLCODE\nSET HEAD OFF PAGES 0\nHOST sleep 100\nSELECT STATUS from v$instance;')
+    out, err = proc.communicate('WHENEVER SQLERROR EXIT SQL.SQLCODE\nSET HEAD OFF PAGES 0\nSELECT STATUS from v$instance;')
 
     if proc.returncode == 0:
         return out.strip()
