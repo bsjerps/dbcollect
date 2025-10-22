@@ -179,7 +179,7 @@ def get_instances(args):
     try:
         execute('timeout --version')
     except OSError:
-        raise CustomException(Errors.E044, 'timeout')
+        logging.debug('timeout missing')
 
     if args.logons:
         # Connect to services listed in the connect file
