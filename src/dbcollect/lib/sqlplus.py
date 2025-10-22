@@ -27,8 +27,11 @@ def sqlplus(orahome, sid, connectstring, tmpdir, quiet=False, timeout=None):
         cmd  = [sqlplus_bin, '-S', '-L', '/', 'as', 'sysdba']
 
     if timeout is not None:
-        cmd.insert(0, str(timeout))
-        cmd.insert(0, 'timeout')
+        if os.path.exists('/usr/bin/timeout'):
+            cmd.insert(0, str(timeout))
+            cmd.insert(0, 'timeout')
+        else:
+            logging.debug('Timeout not detected')
 
     if quiet:
         stdout = open('/dev/null', 'w')

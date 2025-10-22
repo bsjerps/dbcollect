@@ -8,7 +8,7 @@ versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
     'copyright': "Copyright 2024, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html",
-    'version': "1.18.5"
+    'version': "1.18.6"
 }
 
 settings = {
@@ -96,6 +96,8 @@ linux_config = {
         'lsblk_el6': 'lsblk -PbnDo name,maj:min,kname,type,label,size,fstype,sched',
         'lsblk_long': 'lsblk -PbnDo name,maj:min,kname,type,label,size,fstype,sched,wwn,hctl,pkname,serial,vendor,model',
         'rpm_packages': 'rpm -qa --queryformat %{name}|%{version}|%{release}|%{summary}\\n',
+        #'rpm_packages_long': 'rpm -qa --queryformat %{name}|%{version}|%{release}|%{vendor}|%{packager}|%{distribution}|%{size}|%{url}|%{summary}\\n',
+        #'rpm_packages_desc': 'rpm -qa --queryformat %{name}|%{version}|%{release}|%{description}\\n',
         'dpkg_l': 'dpkg -l',
         'ulimit_a': 'ulimit -a',
         'systemctl_units': 'systemctl list-units',
