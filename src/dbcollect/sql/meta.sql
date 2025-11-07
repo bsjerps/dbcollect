@@ -38,11 +38,13 @@ BEGIN
 
 	IF v_status IN ('MOUNTED', 'OPEN') THEN
 		SELECT ',' ||
-			chr(10) || '  "dbid": '           || chr(34) || dbid           || chr(34) || ','
-		||  chr(10) || '  "dbname": '         || chr(34) || name           || chr(34) || ','
-		||  chr(10) || '  "db_unique_name": ' || chr(34) || db_unique_name || chr(34) || ','
-		||  chr(10) || '  "database_role": '  || chr(34) || database_role  || chr(34) || ','
-		||  chr(10) || '  "created": '        || chr(34) || created        || chr(34) 
+			chr(10) || '  "dbid": '                 || chr(34) || dbid                || chr(34) || ','
+		||  chr(10) || '  "dbname": '               || chr(34) || name                || chr(34) || ','
+		||  chr(10) || '  "db_unique_name": '       || chr(34) || db_unique_name      || chr(34) || ','
+		||  chr(10) || '  "database_role": '        || chr(34) || database_role       || chr(34) || ','
+        ||  chr(10) || '  "controlfile_type": '     || chr(34) || controlfile_type    || chr(34) || ','
+        ||  chr(10) || '  "controlfile_created": '  || chr(34) || controlfile_created || chr(34) || ','
+		||  chr(10) || '  "created": '              || chr(34) || created             || chr(34) 
 		INTO v_database FROM v$database;
 	END IF;
 

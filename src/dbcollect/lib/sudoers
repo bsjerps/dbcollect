@@ -1,2 +1,4 @@
 # sudoers file for dbcollect. Can be safely removed
-%dba	ALL = (ALL) NOPASSWD: /usr/sbin/diskinfo, /usr/sbin/ioscan -fnC processor, /usr/sbin/pvdisplay, /usr/sbin/lvdisplay, /usr/sbin/multipath -ll, /sbin/vgs, /sbin/pvs, /sbin/lvs
+Cmnd_Alias DBCOLLECT = /usr/sbin/diskinfo, /usr/sbin/ioscan -fnC processor, /usr/sbin/pvdisplay, \
+    /usr/sbin/lvdisplay, /usr/sbin/multipath -ll, /sbin/vgs, /sbin/pvs, /sbin/lvs, /usr/sbin/dmidecode, /usr/sbin/lshw, /usr/bin/rpm -Va
+%dba, %dbcollect, nobody	ALL = (ALL) NOPASSWD: DBCOLLECT

@@ -38,8 +38,8 @@ class JSONFile():
         self.info['timestamp']    = get_timestamp(datetime.now())
         self.info['timestamputc'] = get_timestamp(datetime.utcnow())
         self.info.update(kwargs)
-        self.errors = None
-        self.data   = None
+        self.errors = ''
+        self.data   = ''
         if cmd:
             self.execute(cmd, sudo)
         elif path:
@@ -74,6 +74,8 @@ class JSONFile():
         self.info['command']   = cmd
         out, err = None, None
         if sudo is True:
+            basecmd = cmd.split()[0]
+
             if not os.path.exists('/usr/bin/sudo'):
                 self.info['status'] = 'ERROR'
                 self.errors         = '/usr/bin/sudo not found'
@@ -81,11 +83,21 @@ class JSONFile():
             cmd = 'sudo -n {0}'.format(cmd)
             self.info['sudo'] = True
             self.info['fullcommand'] = cmd
+
+            which_out, which_err, which_rc = execute('which {0}'.format(basecmd))
+            if which_rc==1:
+                self.errors = which_err
+                self.info['status']     = 'SUDO_NONEXISTENT'
+                self.info['returncode'] = which_rc
+                return
         try:
             out, err, rc = execute(cmd, **kwargs)
             self.data   = out
             self.errors = err
-            self.info['status']     = 'OK'
+            if rc==1 and err.startswith('sudo'):
+                self.info['status']     = 'SUDO_FAIL'
+            else:
+                self.info['status']     = 'OK'
             self.info['returncode'] = rc
         except OSError as e:
             self.info['status']     = 'ERROR'
@@ -115,9 +127,11 @@ class JSONFile():
             with open(path) as f:
                 self.data = f.read()
             self.info['status'] = 'OK'
+
         except IOError as e:
             self.info['status'] = 'ERROR'
             self.errors = os.strerror(e.errno)
+
         except Exception as e:
             self.info['status'] = 'ERROR'
             self.info['status'] = 'Critical Error'
@@ -135,7 +149,8 @@ class JSONFile():
             with open(path) as f:
                 self.data = f.read()
             os.unlink(path)
-        except Exception as e:
+
+        except Exception:
             self.info['status'] = 'ERROR'
             self.errors = 'Data not available'
 
@@ -163,7 +178,7 @@ class JSONFile():
 
     def dump(self):
         """Return the data as JSON text"""
-        return json.dumps(self.info, indent=2, sort_keys=True)
+        return json.dumps(self.info, indent=2)
 
     def save(self, path):
         """Save self as jsonp file"""
@@ -174,7 +189,7 @@ class JSONFile():
         """Return the data as JSONPlus"""
         if self.errors:
             self.info['errors'] = self.errors.splitlines()
-        data = json.dumps(self.info, indent=2, sort_keys=True)
+        data = json.dumps(self.info, indent=2)
         if self.data:
             data += '\n'
             data += self.data

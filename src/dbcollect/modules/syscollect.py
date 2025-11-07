@@ -9,6 +9,7 @@ from lib.config import linux_config, aix_config, sunos_config, hpux_config
 from lib.jsonfile import JSONFile
 from lib.functions import execute, listdir
 from lib.errors import Errors
+from modules.linux import get_blockdevs, get_disklist, get_niclist
 
 # Check to continue even if platform is unknown?
 def host_info(archive, args):
@@ -110,59 +111,14 @@ def linux_info(archive, args):
     # TODO:
     # powerpath / scaleio? -> Need root?
 
-    disklist = []
-    out, err, rc = execute('lsblk -dno name')
-    for dev in out.rstrip().splitlines():
-        info = { 'name': dev, 'properties': {} }
-        for file in  ['dev', 'device/model','device/rev','device/queue_depth','device/vendor','device/serial','size','queue/scheduler']:
-            path = os.path.join('/sys/class/block/{0}/{1}'.format(dev, file))
-            var = file.split('/')[-1]
-            try:
-                with open(path) as f:
-                    data = f.read().strip()
-                    if var in ('queue_depth','size'):
-                        data = int(data)
-                    info[var] = data
-            except IOError as e:
-                info[var] = None
-        cmd = 'udevadm info -q symlink -n {0}'.format(dev)
-        out, err, rc = execute(cmd)
-        if rc != 0:
-            info['udevadm_cmd'] = { 'command': cmd, 'stdout': out, 'stderr': err, 'rc': rc }
-        info['symlinks'] = out.split()
-        cmd = 'udevadm info -q property -n {0}'.format(dev)
-        out, err, rc = execute(cmd)
-        for k, v in re.findall(r'^(\S+)=(.*)', out, re.M):
-            info['properties'][k] = v
-        disklist.append(info)
-
-    diskinfo = JSONFile()
-    diskinfo.set('diskinfo', {'disklist': disklist })
+    diskinfo = get_disklist()
     archive.writestr('diskinfo.json', diskinfo.dump())
 
-    niclist = []
-    for dev in listdir('/sys/class/net'):
-        if dev == 'lo':
-            continue
-        info = { 'name': dev }
-        directory = os.path.join('/sys/class/net', dev)
-        if not os.path.isdir(directory):
-            continue
-        for var in ['mtu', 'speed', 'address','duplex']:
-            path = os.path.join(directory, var)
-            try:
-                with open(path) as f:
-                    data = f.read().rstrip()
-                    if var in ('mtu','speed'):
-                        data = int(data)
-                    info[var] = data
-            except  (IOError, OSError) as e:
-                info[var] = None
-        niclist.append(info)
-
-    nicinfo = JSONFile()
-    nicinfo.set('nicinfo', {'niclist': niclist} )
+    nicinfo = get_niclist()
     archive.writestr('nicinfo.json', nicinfo.dump())
+
+    blkinfo = get_blockdevs()
+    archive.writestr('blockinfo.json', blkinfo.dump())
 
     out, err, rc = execute('lsblk -V')
     lsblk_version = (out + err).split()[-1]
@@ -173,12 +129,25 @@ def linux_info(archive, args):
         if tag == 'lsblk_el6' and not lsblk_version.startswith('2.1'):
             continue
 
+        logging.debug('running command: %s', cmd)
         df = JSONFile(cmd=cmd)
         archive.writestr('cmd/{0}.jsonp'.format(tag), df.jsonp())
 
-    for tag, cmd in linux_config['rootcommands'].items():
-        df = JSONFile(cmd=cmd, sudo=True)
-        archive.writestr('cmd/{0}.jsonp'.format(tag), df.jsonp())
+    if not args.no_sudo:
+        jc = JSONFile(cmd='sudo -n -l')
+        archive.writestr('cmd/sudo_nl.jsonp', jc.jsonp())
+
+        sudo_failed  = []
+        for tag, cmd in linux_config['rootcommands'].items():
+            logging.debug('running as root (sudo): %s', cmd)
+            df = JSONFile(cmd=cmd, sudo=True)
+            if df.errors.startswith('sudo'):
+                sudo_failed.append('"{0}"'.format(cmd))
+
+            archive.writestr('cmd/{0}.jsonp'.format(tag), df.jsonp())
+
+        if sudo_failed:
+            logging.info('Blocked sudo commands: %s', ', '.join(sudo_failed))
 
     for file in linux_config['files']:
         df = JSONFile(path=file)

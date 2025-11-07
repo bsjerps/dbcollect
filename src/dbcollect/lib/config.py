@@ -8,7 +8,7 @@ versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
     'copyright': "Copyright 2024, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html",
-    'version': "1.18.7"
+    'version': "1.18.8"
 }
 
 settings = {
@@ -62,6 +62,7 @@ dbinfo_config = {
         'db_compression.sql',
     ],
     'oracle12': [
+        'asmdisks_detail.sql',
         'dataguard_config.sql',
         'pdb_cdbinfo.sql',
         'pdb_databases.sql',
@@ -78,6 +79,7 @@ dbinfo_config = {
 
 linux_config = {
     'commands': {
+        'id': 'id',
         'lscpu': 'lscpu',
         'lsscsi': 'lsscsi',
         'lsmod': 'lsmod',
@@ -96,19 +98,23 @@ linux_config = {
         'lsblk_el6': 'lsblk -PbnDo name,maj:min,kname,type,label,size,fstype,sched',
         'lsblk_long': 'lsblk -PbnDo name,maj:min,kname,type,label,size,fstype,sched,wwn,hctl,pkname,serial,vendor,model',
         'rpm_packages': 'rpm -qa --queryformat %{name}|%{version}|%{release}|%{summary}\\n',
-        #'rpm_packages_long': 'rpm -qa --queryformat %{name}|%{version}|%{release}|%{vendor}|%{packager}|%{distribution}|%{size}|%{url}|%{summary}\\n',
-        #'rpm_packages_desc': 'rpm -qa --queryformat %{name}|%{version}|%{release}|%{description}\\n',
+        'rpm_packages_long': 'rpm -qa --queryformat %{name}|%{version}|%{release}|%{vendor}|%{packager}|%{distribution}|%{size}|%{url}|%{summary}\\n',
+        'rpm_packages_desc': 'rpm -qa --queryformat %{name}|%{version}|%{release}|%{description}\\n',
         'dpkg_l': 'dpkg -l',
         'ulimit_a': 'ulimit -a',
         'systemctl_units': 'systemctl list-units',
         'systemctl_timers': 'systemctl list-timers',
-        'id': 'id',
+        'sysstat_timer': 'systemctl show sysstat-collect.timer',
     },
     'rootcommands': {
-        'multipath_ll': '/usr/sbin/multipath -ll',
+        'multipath_ll': 'multipath -ll',
         'vgs': 'vgs --separator \t --units m --nosuffix -o +fmt,uuid',
         'pvs': 'pvs --separator \t --units m --nosuffix -o +uuid,missing,in_use',
-        'lvs': 'lvs --separator \t --units m --nosuffix -o +uuid,stripes,stripe_size,chunk_size'
+        'lvs': 'lvs --separator \t --units m --nosuffix -o +uuid,stripes,stripe_size,chunk_size',
+        'dmidecode': 'dmidecode',
+        'lshw_short': 'lshw -short',
+        'lshw_json': 'lshw -json',
+        'rpm_va': 'rpm -Va',
     },
     'files': [
         '/proc/cmdline',

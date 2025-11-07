@@ -47,6 +47,7 @@ def main():
     parser.add_argument("-o", "--overwrite",  action="store_true",        help="Overwrite previous zip file")
     parser.add_argument(      "--update",     action="store_true",        help="Check for updates")
     parser.add_argument(      "--sudoers",    action="store_true",        help="Install sudoers file")
+    parser.add_argument(      "--no-sudo",    action="store_true",        help="Don't run sudo root commands")
     parser.add_argument(      "--filename",   type=str,                   help="output filename, default dbcollect-<hostname>.zip")
     parser.add_argument(      "--tempdir",    type=str, default='/tmp',   help="TEMP directory, default /tmp")
     parser.add_argument("-u", "--user",       type=str,                   help="Switch to user (if run as root)")
@@ -99,15 +100,20 @@ def main():
     if args.version:
         printversion()
         return
+
     if args.quiet:
         sys.stdout = open('/dev/null','w')
+
     if args.filename:
         if not args.filename.endswith('.zip'):
             args.filename += '.zip'
         zippath = os.path.join('/tmp', args.filename)
+
     else:
         zippath = (os.path.join('/tmp', 'dbcollect-{0}.zip'.format(platform.uname()[1])))
+
     logpath = settings['logpath']
+
     try:
         logsetup(args, logpath)
     except Exception as e:
