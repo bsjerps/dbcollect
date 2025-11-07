@@ -113,6 +113,7 @@ linux_config = {
         'lvs': 'lvs --separator \t --units m --nosuffix -o +uuid,stripes,stripe_size,chunk_size',
         'dmidecode': 'dmidecode',
         'lshw_short': 'lshw -short',
+        'lshw': 'lshw',
         'lshw_json': 'lshw -json',
         'rpm_va': 'rpm -Va',
     },

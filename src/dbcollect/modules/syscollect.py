@@ -86,6 +86,7 @@ def linux_info(archive, args):
             info[cmd] = out.strip()
 
         except OSError as e:
+            info[cmd] = None
             logging.warning(Errors.W005, cmd, e)
 
     try:
@@ -129,7 +130,6 @@ def linux_info(archive, args):
         if tag == 'lsblk_el6' and not lsblk_version.startswith('2.1'):
             continue
 
-        logging.debug('running command: %s', cmd)
         df = JSONFile(cmd=cmd)
         archive.writestr('cmd/{0}.jsonp'.format(tag), df.jsonp())
 
@@ -139,15 +139,14 @@ def linux_info(archive, args):
 
         sudo_failed  = []
         for tag, cmd in linux_config['rootcommands'].items():
-            logging.debug('running as root (sudo): %s', cmd)
             df = JSONFile(cmd=cmd, sudo=True)
             if df.errors.startswith('sudo'):
-                sudo_failed.append('"{0}"'.format(cmd))
+                sudo_failed.append('"{0}"'.format(cmd.split()[0]))
 
             archive.writestr('cmd/{0}.jsonp'.format(tag), df.jsonp())
 
         if sudo_failed:
-            logging.info('Blocked sudo commands: %s', ', '.join(sudo_failed))
+            logging.info('Blocked sudo commands: %s', ', '.join(set(sudo_failed)))
 
     for file in linux_config['files']:
         df = JSONFile(path=file)

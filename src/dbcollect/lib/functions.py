@@ -65,4 +65,9 @@ def sudosetup():
             f.write(sudoers)
             os.chmod(sudopath, 0o600)
     except OSError as e:
-        print(e)
+        if e.errno == 13:
+            print('Cannot install sudoers, manually copy it to {0}'.format(sudopath))
+            print()
+            print(sudoers)
+        else:
+            print(e)

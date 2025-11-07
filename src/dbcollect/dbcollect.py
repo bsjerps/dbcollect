@@ -47,7 +47,7 @@ def main():
     parser.add_argument("-o", "--overwrite",  action="store_true",        help="Overwrite previous zip file")
     parser.add_argument(      "--update",     action="store_true",        help="Check for updates")
     parser.add_argument(      "--sudoers",    action="store_true",        help="Install sudoers file")
-    parser.add_argument(      "--no-sudo",    action="store_true",        help="Don't run sudo root commands")
+    parser.add_argument(      "--no-sudo",    action="store_true",        help="Don't try to run sudo root commands")
     parser.add_argument(      "--filename",   type=str,                   help="output filename, default dbcollect-<hostname>.zip")
     parser.add_argument(      "--tempdir",    type=str, default='/tmp',   help="TEMP directory, default /tmp")
     parser.add_argument("-u", "--user",       type=str,                   help="Switch to user (if run as root)")

@@ -91,6 +91,7 @@ class JSONFile():
                 self.info['returncode'] = which_rc
                 return
         try:
+            logging.debug('running command: %s', cmd)
             out, err, rc = execute(cmd, **kwargs)
             self.data   = out
             self.errors = err
