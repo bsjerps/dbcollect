@@ -17,8 +17,11 @@ from lib.errors import Errors
 
 class TracebackInfoFilter(logging.Filter):
     """Clear or restore the exception on log records"""
+
     def __init__(self, clear=True):
         self.clear = clear
+        super().__init__()
+
     def filter(self, record):
         if self.clear:
             record._exc_info_hidden, record.exc_info = record.exc_info, None
@@ -29,27 +32,34 @@ class TracebackInfoFilter(logging.Filter):
             del record._exc_info_hidden
         return True
 
-def logsetup(args, logpath):
+def logsetup(args):
     """Setup logging both to logpath and stderr"""
 
-    logging.basicConfig(filename=logpath,
-        filemode = 'w',
-        level    = logging.DEBUG,
-        format   = "%(asctime)s:%(levelname)-8s: %(message)s",
-        datefmt  = '%Y-%m-%d %I:%M:%S')
+    logpath = "/tmp/dbcollect.log"
 
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.addFilter(TracebackInfoFilter())
-    consoleHandler.setFormatter(logging.Formatter('%(levelname)-8s : %(message)s', datefmt='%Y-%m-%d-%H:%M:%S'))
+    try:
+        logging.basicConfig(filename=logpath,
+            filemode = 'w',
+            level    = logging.DEBUG,
+            format   = "%(asctime)s:%(levelname)-8s: %(message)s",
+            datefmt  = '%Y-%m-%d %I:%M:%S')
 
-    if args.debug:
-        consoleHandler.setLevel(logging.DEBUG)
-    elif args.quiet:
-        consoleHandler.setLevel(logging.ERROR)
-    else:
-        consoleHandler.setLevel(logging.INFO)
+        handler = logging.StreamHandler()
+        handler.addFilter(TracebackInfoFilter())
+        handler.setFormatter(logging.Formatter('%(levelname)-8s : %(message)s', datefmt='%Y-%m-%d-%H:%M:%S'))
 
-    logging.getLogger().addHandler(consoleHandler)
+        if args.debug:
+            handler.setLevel(logging.DEBUG)
+        elif args.quiet:
+            handler.setLevel(logging.ERROR)
+        else:
+            handler.setLevel(logging.INFO)
+
+        logging.getLogger().addHandler(handler)
+
+    except Exception as e:
+        logging.fatal(Errors.E014, logpath, e)
+        raise
 
 def exception_handler(func):
     """Decorator to catch CTRL-C and other exceptions (multiprocessing)

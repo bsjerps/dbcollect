@@ -17,6 +17,7 @@ from lib.errors import Errors
 from lib.user import username, usergroup, usergroups, getuser, getgroup
 from lib.config import versioninfo
 from lib.functions import execute
+from lib.compat import load_file, write_file
 
 def get_timestamp(ts):
     """Workaround for strftime() not working (HP-UX)"""
@@ -125,8 +126,7 @@ class JSONFile():
             self.info['group'] = getgroup(statinfo.st_gid)
             self.info['atime'] = datetime.fromtimestamp(int(statinfo.st_atime)).strftime("%Y-%m-%d %H:%M")
             self.info['mtime'] = datetime.fromtimestamp(int(statinfo.st_mtime)).strftime("%Y-%m-%d %H:%M")
-            with open(path) as f:
-                self.data = f.read()
+            self.data = load_file(path)
             self.info['status'] = 'OK'
 
         except IOError as e:
@@ -183,8 +183,7 @@ class JSONFile():
 
     def save(self, path):
         """Save self as jsonp file"""
-        with open(path, 'w') as f:
-            f.write(self.jsonp())
+        write_file(path, self.jsonp())
 
     def jsonp(self):
         """Return the data as JSONPlus"""

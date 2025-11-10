@@ -3,6 +3,7 @@ import os, re, stat
 from lib.functions import execute, listdir
 from lib.user import getuser, getgroup
 from lib.jsonfile import JSONFile
+from lib.compat import load_file
 
 def get_disklist():
     disklist = []
@@ -13,11 +14,10 @@ def get_disklist():
             path = os.path.join('/sys/class/block/{0}/{1}'.format(dev, file))
             var = file.split('/')[-1]
             try:
-                with open(path) as f:
-                    data = f.read().strip()
-                    if var in ('queue_depth','size'):
-                        data = int(data)
-                    info[var] = data
+                data = load_file(path).strip()
+                if var in ('queue_depth','size'):
+                    data = int(data)
+                info[var] = data
 
             except IOError:
                 info[var] = None
@@ -87,11 +87,10 @@ def get_niclist():
         for var in ['mtu', 'speed', 'address','duplex']:
             path = os.path.join(directory, var)
             try:
-                with open(path) as f:
-                    data = f.read().rstrip()
-                    if var in ('mtu','speed'):
-                        data = int(data)
-                    info[var] = data
+                data = load_file(path).rstrip()
+                if var in ('mtu','speed'):
+                    data = int(data)
+                info[var] = data
             except  (IOError, OSError):
                 info[var] = None
         niclist.append(info)

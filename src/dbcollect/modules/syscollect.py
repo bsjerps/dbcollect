@@ -9,6 +9,7 @@ from lib.config import linux_config, aix_config, sunos_config, hpux_config
 from lib.jsonfile import JSONFile
 from lib.functions import execute, listdir
 from lib.errors import Errors
+from lib.compat import load_file
 from modules.linux import get_blockdevs, get_disklist, get_niclist
 
 # Check to continue even if platform is unknown?
@@ -96,9 +97,8 @@ def linux_info(archive, args):
             path = os.path.join('/sys/class/dmi/id', file)
             if os.path.isfile(path):
                 try:
-                    with open(path) as f:
-                        data = f.read()
-                        info[file] = data.rstrip()
+                    data = load_file(path)
+                    info[file] = data.rstrip()
                 except IOError:
                     info[file] = None
 

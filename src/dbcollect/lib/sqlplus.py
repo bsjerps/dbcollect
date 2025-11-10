@@ -4,9 +4,10 @@ Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
-import os, sys, logging
-from subprocess import Popen, PIPE, STDOUT
+import os, logging
+from subprocess import PIPE, STDOUT
 from lib.errors import Errors, SQLPlusError
+from lib.compat import popen
 
 def sqlplus(orahome, sid, connectstring, tmpdir, quiet=False, timeout=None):
     """
@@ -40,11 +41,7 @@ def sqlplus(orahome, sid, connectstring, tmpdir, quiet=False, timeout=None):
 
     try:
         logging.debug('%s: executing "%s"', sid, ' '.join(cmd))
-        if sys.version_info[0] == 2:
-            proc = Popen(cmd, cwd=tmpdir, bufsize=0, env=env, stdin=PIPE, stdout=stdout, stderr=STDOUT)
-        else:
-            proc = Popen(cmd, cwd=tmpdir, bufsize=0, env=env, stdin=PIPE, stdout=stdout, stderr=STDOUT, encoding='utf-8')
-
+        proc = popen(cmd, cwd=tmpdir, bufsize=0, env=env, stdin=PIPE, stdout=stdout, stderr=STDOUT)
         return proc
 
     except OSError as e:

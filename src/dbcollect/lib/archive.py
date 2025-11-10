@@ -25,8 +25,10 @@ class Archive():
             raise ZipCreateError(Errors.E020, path)
         try:
             self.zip = ZipFile(self.path,'w', ZIP_DEFLATED, allowZip64=True)
-        except OSError as e:
+
+        except OSError:
             raise ZipCreateError(Errors.E003, path)
+
         comment = 'dbcollect version={0} hostname={1}'.format(versioninfo['version'], self.prefix)
         self.zip.comment = comment.encode('utf-8')
 

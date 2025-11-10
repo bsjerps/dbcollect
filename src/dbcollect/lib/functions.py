@@ -6,7 +6,7 @@ License: GPLv3+
 
 import os, sys, errno
 from subprocess import Popen, PIPE
-from pkgutil import get_data
+from lib.compat import get_pkg_resource, load_file
 
 def listdir(directory):
     """Return all files/dirs in dir, or empty list if not exists"""
@@ -17,9 +17,7 @@ def listdir(directory):
 def getscript(name):
     """Directly get an SQL script from the Python package"""
     try:
-        if sys.version_info[0] == 2:
-            return get_data('sql', name)
-        return get_data('sql', name).decode()
+        return get_pkg_resource('sql', name)
     except OSError:
         raise RuntimeError("Cannot load script {0}".format(name))
 
@@ -27,8 +25,8 @@ def getfile(*args):
     """try each file from paths until readable, try next if not exists or no access"""
     for path in args:
         try:
-            with open(path) as f:
-                return f.read()
+            return load_file(path)
+
         except IOError as e:
             if e.errno in [errno.ENOENT, errno.EACCES]:
                 continue
@@ -55,19 +53,3 @@ def execute(cmd, **kwargs):
         proc = Popen(command, env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf-8')
     stdout, stderr = proc.communicate()
     return (stdout, stderr, proc.returncode)
-
-def sudosetup():
-    sudopath = '/etc/sudoers.d/dbcollect'
-    print('Installing sudoers file: {0}'.format(sudopath))
-    sudoers = get_data('lib', 'sudoers').decode()
-    try:
-        with open(sudopath, 'w') as f:
-            f.write(sudoers)
-            os.chmod(sudopath, 0o600)
-    except OSError as e:
-        if e.errno == 13:
-            print('Cannot install sudoers, manually copy it to {0}'.format(sudopath))
-            print()
-            print(sudoers)
-        else:
-            print(e)

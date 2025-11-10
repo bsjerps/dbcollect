@@ -11,10 +11,6 @@ versioninfo = {
     'version': "1.18.8"
 }
 
-settings = {
-    'logpath': "/tmp/dbcollect.log",
-}
-
 dbinfo_config = {
     'basic': [
         'instance.sql',

@@ -15,11 +15,15 @@ If 'oracle' is not found, switch to 'nobody' so dbcollect will still work
 safely on systems without Oracle.
 """
 
-import os, sys, re, errno
+import os, sys, re, logging
 import pwd, grp
-from pkgutil import get_data
-from subprocess import CalledProcessError, Popen
+from multiprocessing import Process
+from subprocess import PIPE, CalledProcessError, check_call
+
+from lib.errors import CustomException, Errors
+from lib.compat import write_file, get_pkg_resource
 from lib.functions import execute
+from lib.log import logsetup
 
 def dbuser():
     """"Find the first Oracle database owner"""
@@ -31,15 +35,56 @@ def dbuser():
             return user
     return None
 
-def switchuser(user, args):
-    """Call self as a different user with the same parameters"""
+def sudowrapper(args, func):
+    """Run collection as non-root, create temporary sudoers file"""
+    os.umask(0o0022)
+    sudoers_path = '/etc/sudoers.d/dbcollect'
+    log_path = '/tmp/dbcollect.log'
+
+    if args.user:
+        user = args.user
+    else:
+        user = dbuser()
+
+    sudoers = get_pkg_resource('lib', 'sudoers')
+    sudoers += '{0}	ALL = (ALL) NOPASSWD: DBCOLLECT\n'.format(user)
+
+    try:
+        if os.getuid() == 0 and not args.no_sudo:
+            try:
+                write_file(sudoers_path, sudoers)
+            except OSError:
+                print('Writing sudoers failed')
+
+        logsetup(args)
+
+        proc = Process(target=switchuser, name='UserSub', args=(args, user, func))
+        proc.start()
+        proc.join()
+
+    except KeyboardInterrupt:
+        logging.fatal(Errors.E002)
+
+    finally:
+        if os.path.exists(log_path):
+            os.unlink(log_path)
+
+        if os.path.exists(sudoers_path):
+            os.unlink(sudoers_path)
+
+def switchuser(args, user, func):
+    """Call func as a different user with the same parameters"""
+    if os.getuid() != 0:
+        func(args)
+        return
+
     if user is None:
         user = 'oracle'
     try:
         uid = pwd.getpwnam(user).pw_uid
         home = pwd.getpwnam(user).pw_dir
     except KeyError:
-        print("User {0} not available, trying 'nobody'".format(user))
+        logging.warning("User {0} not available, trying 'nobody'".format(user))
         try:
             user = 'nobody'
             uid = pwd.getpwnam(user).pw_uid
@@ -47,6 +92,7 @@ def switchuser(user, args):
         except KeyError:
             print("User nobody not available, giving up")
             sys.exit(20)
+
     gid = pwd.getpwnam(user).pw_gid
     os.setgid(gid)
     groups = [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
@@ -55,7 +101,7 @@ def switchuser(user, args):
     os.setuid(uid)
 
     try:
-        get_data('lib', 'config.py')
+        get_pkg_resource('lib', 'config.py')
     except PermissionError:
         ziploc = os.path.realpath(sys.path[0])
         print('Cannot read dbcollect package {0}, exiting...'.format(ziploc))
@@ -65,22 +111,15 @@ def switchuser(user, args):
         os.chdir(home)
     except OSError:
         os.chdir('/tmp')
+
     try:
-        proc = Popen(args)
-        proc.communicate()
-        sys.exit(proc.returncode)
+        if not args.no_sudo:
+            check_call(['sudo', '-n', '-l'], stdout=PIPE, stderr=PIPE)
 
-    except KeyboardInterrupt:
-        print("Aborted, exiting...")
-        sys.exit(10)
+    except CalledProcessError:
+        raise CustomException('sudo failed for user {0}'.format(user))
 
-    except CalledProcessError as e:
-        sys.exit(e.returncode)
-
-    except OSError as e:
-        if e.errno in [errno.EACCES]:
-            print('%s, %s' % (e, ' '.join(args)))
-    sys.exit(0)
+    func(args)
 
 def username():
     """Return the username for the current userid"""

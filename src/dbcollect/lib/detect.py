@@ -10,8 +10,8 @@ def sqlplus_status(args, sid, orahome, connectstring):
     if args.no_timeout:
         timeout = None
 
-    proc     = sqlplus(orahome, sid, connectstring, '/tmp', timeout=timeout)
-    out, err = proc.communicate('WHENEVER SQLERROR EXIT SQL.SQLCODE\nSET HEAD OFF PAGES 0\nSELECT STATUS from v$instance;')
+    proc   = sqlplus(orahome, sid, connectstring, '/tmp', timeout=timeout)
+    out, _ = proc.communicate('WHENEVER SQLERROR EXIT SQL.SQLCODE\nSET HEAD OFF PAGES 0\nSELECT STATUS from v$instance;')
 
     if proc.returncode == 0:
         return out.strip()
@@ -25,22 +25,21 @@ def sqlplus_status(args, sid, orahome, connectstring):
         raise SQLPlusError(Errors.E019, sid, 'rc=127')
 
     for oerr, msg in re.findall(r'^(ORA-\d+):\s+(.*)', out, re.M):
-        """
-        Known errors:
-        ORA-00942: table or view does not exist
-        ORA-01017: invalid username/password; logon denied
-        ORA-01033: ORACLE initialization or shutdown in progress
-        ORA-01034: ORACLE not available
-        ORA-01045: user <user> lacks CREATE SESSION privilege; logon denied
-        ORA-12154: TNS:could not resolve the connect identifier specified
-        ORA-12514: TNS:listener does not currently know of service requested in connect
-        ORA-12528: TNS:listener: all appropriate instances are blocking new connections
-        ORA-12537: TNS:connection closed
-        ORA-12541: TNS:no listener
-        ORA-12543: TNS:destination host unreachable
-        ORA-12547, TNS:lost contact
-        ORA-28000: The account is locked.
-        """
+        # Known errors:
+        # ORA-00942: table or view does not exist
+        # ORA-01017: invalid username/password; logon denied
+        # ORA-01033: ORACLE initialization or shutdown in progress
+        # ORA-01034: ORACLE not available
+        # ORA-01045: user <user> lacks CREATE SESSION privilege; logon denied
+        # ORA-12154: TNS:could not resolve the connect identifier specified
+        # ORA-12514: TNS:listener does not currently know of service requested in connect
+        # ORA-12528: TNS:listener: all appropriate instances are blocking new connections
+        # ORA-12537: TNS:connection closed
+        # ORA-12541: TNS:no listener
+        # ORA-12543: TNS:destination host unreachable
+        # ORA-12547, TNS:lost contact
+        # ORA-28000: The account is locked.
+
         if oerr == 'ORA-01017':
             # usually happens when using the wrong ORACLE_HOME or incorrect groups, try the next one
             check_dba_group(sid, orahome)
@@ -52,7 +51,7 @@ def sqlplus_status(args, sid, orahome, connectstring):
 
         # Other ORA errors
         raise SQLError(oerr, msg)
-    
+
     logging.debug('sqlplus output:\n%s', out)
     raise SQLConnectionError(Errors.E001, 'SQL*Plus failed without ORA-* error')
 
@@ -67,7 +66,7 @@ def check_dba_group(sid, orahome):
     if not r:
         logging.warning(Errors.W010, sid)
         return
-    
+
     dba_group   = r.group(1)
     user        = pwd.getpwuid(os.getuid()).pw_name
     user_groups = os.getgroups()
