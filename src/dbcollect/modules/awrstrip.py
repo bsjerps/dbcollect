@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 awrstrip.py - Strip SQL text from html formatted Oracle AWR reports
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 
 The SQL sections are replaced with a 'removed' message.

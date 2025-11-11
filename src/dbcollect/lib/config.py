@@ -1,12 +1,12 @@
 """
 config.py - DBCollect configuration/settings
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
 versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
-    'copyright': "Copyright 2024, Bart Sjerps",
+    'copyright': "Copyright 2025, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html",
     'version': "1.18.8"
 }

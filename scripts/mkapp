@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 mkapp - Creates ZIPAPP package
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 

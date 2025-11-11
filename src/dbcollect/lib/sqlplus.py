@@ -1,6 +1,6 @@
 """
 sqlplus.py - Run SQL*Plus and other binaries in ORACLE_HOME
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 

@@ -1,6 +1,6 @@
 """
 user.py - Manage DBCollect ZIP archives
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 
 Switch user if the current user is root
@@ -18,10 +18,10 @@ safely on systems without Oracle.
 import os, sys, re, logging
 import pwd, grp
 from multiprocessing import Process
-from subprocess import PIPE, CalledProcessError, check_call
+from subprocess import PIPE
 
 from lib.errors import CustomException, Errors
-from lib.compat import write_file, get_pkg_resource
+from lib.compat import write_file, get_pkg_resource, popen
 from lib.functions import execute
 from lib.log import logsetup
 
@@ -50,15 +50,14 @@ def sudowrapper(args, func):
     sudoers += '{0}	ALL = (ALL) NOPASSWD: DBCOLLECT\n'.format(user)
 
     try:
+        logsetup(args)
         if os.getuid() == 0 and not args.no_sudo:
             try:
                 write_file(sudoers_path, sudoers)
             except OSError:
-                print('Writing sudoers failed')
+                raise CustomException(Errors.E046, sudoers_path)
 
-        logsetup(args)
-
-        proc = Process(target=switchuser, name='UserSub', args=(args, user, func))
+        proc = Process(target=switchuser, name='DBCollect_User', args=(args, user, func))
         proc.start()
         proc.join()
 
@@ -83,6 +82,7 @@ def switchuser(args, user, func):
     try:
         uid = pwd.getpwnam(user).pw_uid
         home = pwd.getpwnam(user).pw_dir
+
     except KeyError:
         logging.warning("User {0} not available, trying 'nobody'".format(user))
         try:
@@ -112,12 +112,12 @@ def switchuser(args, user, func):
     except OSError:
         os.chdir('/tmp')
 
-    try:
-        if not args.no_sudo:
-            check_call(['sudo', '-n', '-l'], stdout=PIPE, stderr=PIPE)
-
-    except CalledProcessError:
-        raise CustomException('sudo failed for user {0}'.format(user))
+    if not args.no_sudo:
+        proc = popen(['sudo', '-n', '-l'], stdout=PIPE, stderr=PIPE)
+        _, err = proc.communicate()
+        if proc.returncode:
+            logging.error(Errors.E045, user, err.rstrip().replace('\n', ', '))
+            return
 
     func(args)
 

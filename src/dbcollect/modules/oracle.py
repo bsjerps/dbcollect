@@ -1,6 +1,6 @@
 """
 oracle.py - Oracle functions for DBCollect
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 

@@ -1,6 +1,6 @@
 """
 jsonfile.py - Data file formatting for dbcollect
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 

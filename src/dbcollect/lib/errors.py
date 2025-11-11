@@ -1,6 +1,6 @@
 """
 errors.py - Exception subclasses for DBCollect
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
@@ -100,6 +100,8 @@ class Errors():
     E042 = "[DBC-E042] %s: No valid ORACLE_HOME found (see logfile)"
     E043 = "[DBC-E043] Bad connectstring format: %s"
     E044 = "[DBC-E044] Command not found in $PATH: %s"
+    E045 = "[DBC-E045] sudo failed for user %s (%s)"
+    E046 = "[DBC-E046] cannot write sudoers file %s"
 
 class ErrorHelp():
     @classmethod

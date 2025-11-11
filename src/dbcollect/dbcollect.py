@@ -84,12 +84,11 @@ def collect(args):
         sys.exit(10)
 
     except CustomException as e:
-        for m in e.args:
-            logging.error(m)
+        logging.error(*e.args)
         logging.info("Aborting")
         sys.exit(50)
 
-    except IOError as e:
+    except (OSError, IOError) as e:
         logging.exception(e)
         logging.error(Errors.E012, e.filename, os.strerror(e.errno))
         logging.info("Aborting")
@@ -156,8 +155,12 @@ def main():
         ErrorHelp.help(args.error)
 
     else:
-        sudowrapper(args, collect)
-
+        try:
+            sudowrapper(args, collect)
+        except CustomException as e:
+            logging.error(*e.args)
+            logging.info("Aborting")
+            sys.exit(50)
 
 if __name__ == "__main__":
     print('dbcollect must run from a ZipApp package, use https://github.com/outrunnl/dbcollect/releases/latest')

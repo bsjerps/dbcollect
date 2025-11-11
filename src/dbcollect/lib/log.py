@@ -1,6 +1,6 @@
 """
 log.py - Manage DBCollect logging
-Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 
 logsetup sets up dual logging via separate handlers, one is the dbcollect logfile
