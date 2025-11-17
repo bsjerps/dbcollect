@@ -15,111 +15,82 @@ If 'oracle' is not found, switch to 'nobody' so dbcollect will still work
 safely on systems without Oracle.
 """
 
-import os, sys, re, logging
+import os, sys, re
 import pwd, grp
-from multiprocessing import Process
-from subprocess import PIPE
 
-from lib.errors import CustomException, Errors
-from lib.compat import write_file, get_pkg_resource, popen
-from lib.functions import execute
-from lib.log import logsetup
+from lib.errors import CustomException
+from lib.compat import get_pkg_resource, execute
 
-def dbuser():
-    """"Find the first Oracle database owner"""
-    stdout, _, _ = execute('ps -eo uid,args')
-    for uid, cmd in re.findall(r'(\d+)\s+(.*)', stdout):
-        r = re.match(r'ora_pmon_(\w+)', cmd)
-        if r:
-            user = pwd.getpwuid(int(uid)).pw_name
-            return user
-    return None
+def _get_user(args):
+    """Get the user to run as"""
 
-def sudowrapper(args, func):
-    """Run collection as non-root, create temporary sudoers file"""
-    os.umask(0o0022)
-    sudoers_path = '/etc/sudoers.d/dbcollect'
-    log_path = '/tmp/dbcollect.log'
-
+    # If a user was given, use it
     if args.user:
-        user = args.user
-    else:
-        user = dbuser()
+        return args.user
 
-    sudoers = get_pkg_resource('lib', 'sudoers')
-    sudoers += '{0}	ALL = (ALL) NOPASSWD: DBCOLLECT\n'.format(user)
+    # Find the first user that runs oracle pmon
+    psout = execute('ps -eo user,args')
+    r = re.search(r'(\S+)\s+ora_pmon_(\S+)', psout.stdout)
+    if r:
+        return r.group(1)
 
+    # If nothing found, use nobody
+    return 'nobody'
+
+def get_user(args):
+    """Get the username to run dbcollect with"""
+
+    # Get required username 
+    user = _get_user(args)
+
+    # Check if the user exists
     try:
-        logsetup(args)
-        if os.getuid() == 0 and not args.no_sudo:
-            try:
-                write_file(sudoers_path, sudoers)
-            except OSError:
-                raise CustomException(Errors.E046, sudoers_path)
-
-        proc = Process(target=switchuser, name='DBCollect_User', args=(args, user, func))
-        proc.start()
-        proc.join()
-
-    except KeyboardInterrupt:
-        logging.fatal(Errors.E002)
-
-    finally:
-        if os.path.exists(log_path):
-            os.unlink(log_path)
-
-        if os.path.exists(sudoers_path):
-            os.unlink(sudoers_path)
-
-def switchuser(args, user, func):
-    """Call func as a different user with the same parameters"""
-    if os.getuid() != 0:
-        func(args)
-        return
-
-    if user is None:
-        user = 'oracle'
-    try:
-        uid = pwd.getpwnam(user).pw_uid
-        home = pwd.getpwnam(user).pw_dir
+        pwd.getpwnam(user)
+        return user
 
     except KeyError:
-        logging.warning("User {0} not available, trying 'nobody'".format(user))
-        try:
-            user = 'nobody'
-            uid = pwd.getpwnam(user).pw_uid
-            home = '/tmp'
-        except KeyError:
-            print("User nobody not available, giving up")
-            sys.exit(20)
+        raise CustomException("No such user: %s" % user)
 
-    gid = pwd.getpwnam(user).pw_gid
+def check_zipapp():
+    """Checks access to the dbcollect zipapp package"""
+    # Try to read a file from the package
+    try:
+        get_pkg_resource('lib', 'config.py')
+
+    except (OSError,IOError):
+        ziploc = os.path.realpath(sys.path[0])
+        raise CustomException('Cannot read dbcollect package %s, exiting...' % ziploc)
+
+def drop_user(user):
+    """Drops user privileges from root to the given user"""
+    if os.getuid() != 0:
+        return
+
+    # Get user/group info
+    try:
+        uid    = pwd.getpwnam(user).pw_uid
+        gid    = pwd.getpwnam(user).pw_gid
+        groups = [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
+
+    except KeyError:
+        raise CustomException("User %s not available" % user)
+
+    if uid == 0:
+        raise CustomException('Root not allowed')
+
+    # drop privileges
     os.setgid(gid)
-    groups = [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
     groups.append(gid)
     os.setgroups(groups)
     os.setuid(uid)
 
-    try:
-        get_pkg_resource('lib', 'config.py')
-    except PermissionError:
-        ziploc = os.path.realpath(sys.path[0])
-        print('Cannot read dbcollect package {0}, exiting...'.format(ziploc))
-        sys.exit(10)
+    # Set working directory
+    os.chdir('/tmp')
 
-    try:
-        os.chdir(home)
-    except OSError:
-        os.chdir('/tmp')
+    # Set file creation mask
+    os.umask(0o0022)
 
-    if not args.no_sudo:
-        proc = popen(['sudo', '-n', '-l'], stdout=PIPE, stderr=PIPE)
-        _, err = proc.communicate()
-        if proc.returncode:
-            logging.error(Errors.E045, user, err.rstrip().replace('\n', ', '))
-            return
-
-    func(args)
+    check_zipapp()
 
 def username():
     """Return the username for the current userid"""

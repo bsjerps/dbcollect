@@ -4,11 +4,12 @@ Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
-import sys, os, platform, logging, json, time
+import sys, os, platform, logging, json, time, pwd
 from datetime import datetime
 
 try:
     from lib.buildinfo import buildinfo
+
 except ImportError:
     print("Error: No buildinfo")
     sys.exit(20)
@@ -16,19 +17,68 @@ except ImportError:
 from lib.errors import Errors
 from lib.user import username, usergroup, usergroups, getuser, getgroup
 from lib.config import versioninfo
-from lib.functions import execute
-from lib.compat import load_file, write_file
+from lib.compat import load_file, write_file, strerror, execute, TimeoutExpired
 
 def get_timestamp(ts):
     """Workaround for strftime() not working (HP-UX)"""
     return '{0:04}-{1:02}-{2:02} {3:02}:{4:02}'.format(ts.year, ts.month, ts.day, ts.hour, ts.minute)
 
-class JSONFile():
+class FileInfo():
+    def __init__(self, path):
+        self.path = path
+        self.info = {}
+        self.info['path']   = self.path
+        self.info['status'] = None
+        self._data = None
+
+    def get_info(self):
+        if not os.path.isfile(self.path):
+            self.info['status'] = 'Nonexistent'
+            return
+
+        try:
+            statinfo = os.stat(self.path)
+            self.info['dirname'] = os.path.dirname(self.path)
+            self.info['basename'] = os.path.basename(self.path)
+            self.info['size']  = statinfo.st_size
+            self.info['mode']  = oct(statinfo.st_mode)
+            self.info['uid']   = statinfo.st_uid
+            self.info['gid']   = statinfo.st_gid
+            self.info['user']  = getuser(statinfo.st_uid)
+            self.info['group'] = getgroup(statinfo.st_gid)
+            self.info['hardlinks'] = statinfo.st_nlink
+            self.info['atime'] = datetime.fromtimestamp(int(statinfo.st_atime)).strftime("%Y-%m-%d %H:%M")
+            self.info['mtime'] = datetime.fromtimestamp(int(statinfo.st_mtime)).strftime("%Y-%m-%d %H:%M")
+
+        except IOError as e:
+            self.info['status'] = 'ERROR'
+            self.info['error']  = strerror(e.errno)
+
+    @property
+    def data(self):
+        if self._data is None:
+            self._data = load_file(self.path)
+        return self._data
+
+    @property
+    def is_gzip(self):
+        magic = b'\x1f\x8b'
+        with open(self.path, 'rb') as f:
+            buf = f.read(2)
+
+        return buf == magic
+
+    @property
+    def dict(self):
+        self.get_info()
+        return self.info
+
+class JSONPlus():
     """
     Container for a JSONPlus file
     JSONPlus file format is simply a JSON with the data of a command or file appended
     """
-    def __init__(self, cmd=None, path=None, sudo=False, **kwargs):
+    def __init__(self):
         self.info = {}
         self.info['application']  = 'dbcollect'
         self.info['version']      = versioninfo['version']
@@ -38,125 +88,153 @@ class JSONFile():
         self.info['processor']    = platform.processor() # x86_64 | i386 | sparc | powerpc | Intel64 Family ...
         self.info['timestamp']    = get_timestamp(datetime.now())
         self.info['timestamputc'] = get_timestamp(datetime.utcnow())
-        self.info.update(kwargs)
-        self.errors = ''
+        self.info['status']       = None
+        self.name   = None
+        self.errors = None
         self.data   = ''
-        if cmd:
-            self.execute(cmd, sudo)
-        elif path:
-            self.readfile(path)
-        self.info.update(kwargs)
-
-    def meta(self):
-        """Set default metadata fields"""
-        runinfo = {}
-        runinfo['python']      = platform.python_version()
-        runinfo['timezone']    = time.strftime("%Z", time.gmtime())           # The system's configured timezone
-        runinfo['cmdline']     = ' '.join(sys.argv)        # Command by which we are called
-        runinfo['username']    = username()                # Username (after switching from root)
-        runinfo['usergroup']   = usergroup()               # Primary group
-        runinfo['usergroups']  = ','.join(usergroups())    # List of groups we are a member of
-        runinfo['zipname']     = os.path.realpath(__loader__.archive)
-        self.info['runinfo']   = runinfo
-        self.info['buildinfo'] = buildinfo
 
     def set(self, name, val):
         """Setter for any kind of metric"""
         self.info[name] = val
 
-    def execute(self, cmd, sudo=False, **kwargs):
+    def dump(self):
+        """Return the data as JSON text"""
+        return json.dumps(self.info, indent=2)
+
+    def save(self, path):
+        """Save self as jsonp file"""
+        write_file(path, self.jsonp())
+
+    def jsonp(self):
+        """Return the data as JSONPlus"""
+        if self.errors:
+            self.info['errors'] = self.errors.splitlines()
+        data = json.dumps(self.info, indent=2)
+        if self.data:
+            data += '\n'
+            data += self.data
+        return data
+
+class JSONPlusMeta(JSONPlus):
+    """Container for meta.json"""
+    def __init__(self):
+        JSONPlus.__init__(self)  # Avoid super() as it differs on Python 2
+        runinfo = {}
+        runinfo['python']      = platform.python_version()
+        runinfo['timezone']    = time.strftime("%Z", time.gmtime()) # The system's configured timezone
+        runinfo['cmdline']     = ' '.join(sys.argv)                 # Command by which we are called
+        runinfo['username']    = username()                         # Username (after switching from root)
+        runinfo['usergroup']   = usergroup()                        # Primary group
+        runinfo['usergroups']  = ','.join(usergroups())             # List of groups we are a member of
+        runinfo['zipname']     = os.path.realpath(__loader__.archive)
+        self.info['runinfo']   = runinfo
+        self.info['buildinfo'] = buildinfo
+
+class JSONPlusCommand(JSONPlus):
+    def __init__(self, args, cmd, progress=None, **kwargs):
+        JSONPlus.__init__(self)
+        user = pwd.getpwuid(os.getuid()).pw_name
+        self.info['mediatype']  = 'command'
+        self.info['format']     = 'text'
+        self.info['command']    = cmd
+        self.info['user']       = user
+        self.info['returncode'] = None
+
         """
         Execute a command and return the output with the header.
         Forward kwargs to the execute function (extra env variables)
         Also record status and errors
         """
-        self.info['mediatype'] = 'command'
-        self.info['format']    = 'text'
-        self.info['command']   = cmd
-        out, err = None, None
-        if sudo is True:
-            basecmd = cmd.split()[0]
 
-            if not os.path.exists('/usr/bin/sudo'):
-                self.info['status'] = 'ERROR'
-                self.errors         = '/usr/bin/sudo not found'
-                return
-            cmd = 'sudo -n {0}'.format(cmd)
-            self.info['sudo'] = True
-            self.info['fullcommand'] = cmd
+        if cmd is None:
+            return
 
-            which_out, which_err, which_rc = execute('which {0}'.format(basecmd))
-            if which_rc==1:
-                self.errors = which_err
-                self.info['status']     = 'SUDO_NONEXISTENT'
-                self.info['returncode'] = which_rc
-                return
+        basecmd = cmd.split()[0]
+        if args.skip_cmd and basecmd in args.skip_cmd.split(','):
+            self.info['status'] = 'SKIPPED'
+            logging.debug('Skipping command %s', cmd)
+            return
+
         try:
-            logging.debug('running command: %s', cmd)
-            out, err, rc = execute(cmd, **kwargs)
-            self.data   = out
-            self.errors = err
-            if rc==1 and err.startswith('sudo'):
-                self.info['status']     = 'SUDO_FAIL'
+            msg = 'running command (%s): %s' % (user, cmd)
+
+            if progress:
+                progress.message(msg)
+
+            completed = execute(cmd, timeout=10, **kwargs)
+            self.data   = completed.stdout
+            self.errors = completed.stderr
+            self.info['returncode'] = completed.returncode
+
+            if completed.returncode:
+                self.info['status'] = 'FAILED'
             else:
-                self.info['status']     = 'OK'
-            self.info['returncode'] = rc
+                self.info['status'] = 'OK'
+
+        except TimeoutExpired as e:
+            logging.debug('Timeout on %s', cmd)
+            self.info['status']     = 'TIMEOUT'
+            self.info['returncode'] = None
+            self.errors = str(e)
+
         except OSError as e:
             self.info['status']     = 'ERROR'
-            self.errors             = os.strerror(e.errno)
+            self.errors             = strerror(e.errno)
             self.info['returncode'] = None
 
-    def readfile(self, path):
-        """
-        Retrieve a flat file and return the output with the header.
-        Also record status and errors
-        """
+class JSONPlusFile(JSONPlus):
+    def __init__(self, path, progress=None):
+        JSONPlus.__init__(self)
         self.info['mediatype'] = 'flatfile'
         self.info['format']    = 'raw'
         self.info['path']      = path
+
         if not os.path.isfile(path):
             logging.debug('%s: No such file or directory', path)
             self.info['status'] = 'Nonexistent'
             return
+
         try:
-            statinfo = os.stat(path)
-            self.info['size']  = statinfo.st_size
-            self.info['mode']  = oct(statinfo.st_mode)
-            self.info['user']  = getuser(statinfo.st_uid)
-            self.info['group'] = getgroup(statinfo.st_gid)
-            self.info['atime'] = datetime.fromtimestamp(int(statinfo.st_atime)).strftime("%Y-%m-%d %H:%M")
-            self.info['mtime'] = datetime.fromtimestamp(int(statinfo.st_mtime)).strftime("%Y-%m-%d %H:%M")
-            self.data = load_file(path)
-            self.info['status'] = 'OK'
+            msg = 'reading file: %s' % path
+            if progress:
+                progress.message(msg)
+
+            fileinfo  = FileInfo(path)
+            self.data = fileinfo.data
+            fileinfo.info['status'] = 'OK'
+            self.info['fileinfo'] = fileinfo.dict
 
         except IOError as e:
             self.info['status'] = 'ERROR'
-            self.errors = os.strerror(e.errno)
+            self.errors = strerror(e.errno)
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             self.info['status'] = 'ERROR'
             self.info['status'] = 'Critical Error'
             logging.critical(Errors.E015, path, e)
 
-    def dbinfo(self, instance, name, path):
-        """
-        Create a dbinfo report
-        """
+class JSONPlusDBInfo(JSONPlus):
+    """Create a dbinfo report"""
+    def __init__(self, instance, path, **kwargs):
+        JSONPlus.__init__(self)
         self.info['mediatype'] = 'dbinfo'
         self.info['format']    = 'sqlplus'
-        self.info['script']    = name
         self.info['oracle']    = instance.meta
+        self.info['sqlplus']   = kwargs
+
         try:
-            with open(path) as f:
-                self.data = f.read()
+            self.data = load_file(path)
+            self.info['status'] = 'OK'
             os.unlink(path)
 
-        except Exception:
+        except Exception: # pylint: disable=broad-exception-caught
             self.info['status'] = 'ERROR'
             self.errors = 'Data not available'
 
-    def dir(self, *dirs):
-        """Report contents of given directories"""
+class JSONPlusDirectories(JSONPlus):
+    """Report contents of given directories"""
+    def __init__(self, *dirs):
+        JSONPlus.__init__(self)
         self.info['directories'] = []
         for directory in dirs:
             if not os.path.isdir(directory):
@@ -176,21 +254,3 @@ class JSONFile():
                     'group': getgroup(st.st_gid)
                 })
             self.info['directories'].append({ 'directory': directory, 'files': files})
-
-    def dump(self):
-        """Return the data as JSON text"""
-        return json.dumps(self.info, indent=2)
-
-    def save(self, path):
-        """Save self as jsonp file"""
-        write_file(path, self.jsonp())
-
-    def jsonp(self):
-        """Return the data as JSONPlus"""
-        if self.errors:
-            self.info['errors'] = self.errors.splitlines()
-        data = json.dumps(self.info, indent=2)
-        if self.data:
-            data += '\n'
-            data += self.data
-        return data

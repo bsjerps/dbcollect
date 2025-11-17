@@ -47,12 +47,12 @@ def update(current):
         logging.info('Setting permissions on %s to 0755', _tmpfile)
         os.chmod(_tmpfile, 0o755)
     except IOError as err:
-        logging.error('IO Error writing to %s: %s', _tmpfile, os.strerror(err.errno))
+        logging.error('IO Error writing to %s: %s', _tmpfile, os.strerror(err.errno or 0))
         sys.exit(10)
     try:
         logging.info('Moving %s to %s', _tmpfile, _target)
         move(_tmpfile, _target)
     except IOError as err:
-        logging.error('IO Error moving to %s: %s', _target, os.strerror(err.errno))
+        logging.error('IO Error moving to %s: %s', _target, os.strerror(err.errno or 0))
         logging.info('Manually move %s to /usr/local/bin or use "sudo %s"', _tmpfile, ' '.join(sys.argv))
         sys.exit(10)

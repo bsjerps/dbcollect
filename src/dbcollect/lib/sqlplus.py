@@ -7,7 +7,7 @@ License: GPLv3+
 import os, logging
 from subprocess import PIPE, STDOUT
 from lib.errors import Errors, SQLPlusError
-from lib.compat import popen
+from lib.compat import popen, strerror
 
 def sqlplus(orahome, sid, connectstring, tmpdir, quiet=False, timeout=None):
     """
@@ -24,8 +24,10 @@ def sqlplus(orahome, sid, connectstring, tmpdir, quiet=False, timeout=None):
 
     if connectstring:
         cmd  = [sqlplus_bin, '-S', '-L', connectstring]
+        msg  = '%s: executing "%s"' % (sid, ' '.join(cmd[:-1]) + ' <connectstring>')
     else:
         cmd  = [sqlplus_bin, '-S', '-L', '/', 'as', 'sysdba']
+        msg  = '%s: executing "%s"' % (sid, ' '.join(cmd))
 
     if timeout is not None:
         if os.path.exists('/usr/bin/timeout'):
@@ -35,14 +37,14 @@ def sqlplus(orahome, sid, connectstring, tmpdir, quiet=False, timeout=None):
             logging.debug('Timeout not detected')
 
     if quiet:
-        stdout = open('/dev/null', 'w')
+        stdout = open('/dev/null', 'wb')
     else:
         stdout = PIPE
 
     try:
-        logging.debug('%s: executing "%s"', sid, ' '.join(cmd))
+        logging.debug(msg)
         proc = popen(cmd, cwd=tmpdir, bufsize=0, env=env, stdin=PIPE, stdout=stdout, stderr=STDOUT)
         return proc
 
     except OSError as e:
-        raise SQLPlusError(Errors.E019, sid, os.strerror(e.errno))
+        raise SQLPlusError(Errors.E019, sid, strerror(e.errno))

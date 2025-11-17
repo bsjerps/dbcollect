@@ -4,6 +4,10 @@ Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
+DBCOLLECT_LOG     = '/tmp/dbcollect.log'
+ROOTQUEUE_TIMEOUT = 10 # must be lower than the workqueue timeout
+WORKQUEUE_TIMEOUT = 20 # must be higher than the rootqueue timeout
+
 versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
     'copyright': "Copyright 2025, Bart Sjerps",
@@ -82,6 +86,7 @@ linux_config = {
         'dmesg': 'dmesg',
         'ps_ef': 'ps -ef',
         'ps_faux': 'ps faux',
+        'ps_long': 'ps -eo pid,ppid,lstart,cputimes,etimes,flags,nlwp,vsz,rss,drs,trs,sz,sched,policy,args',
         'df_PT': 'df -PT',
         'ip_links': 'ip -o link show',
         'ip_addrs': 'ip -o addr show',
@@ -111,7 +116,7 @@ linux_config = {
         'lshw_short': 'lshw -short',
         'lshw': 'lshw',
         'lshw_json': 'lshw -json',
-        'rpm_va': 'rpm -Va',
+        #'rpm_va': 'rpm -Va',
     },
     'files': [
         '/proc/cmdline',

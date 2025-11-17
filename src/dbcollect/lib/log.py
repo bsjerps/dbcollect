@@ -8,70 +8,74 @@ which logs at DEBUG level (most everything)
 the other is the consolehandler which logs at INFO or ERROR if --quiet is requested.
 The filter prevents traceback logs on the console but these are still logged
 to the logfile for diagnostic purposes.
-
-logsetup must be called AFTER switching users, or strange things will happen.
 """
 
-import sys, logging
+import os, sys, pwd, logging
 from lib.errors import Errors
 
 class TracebackInfoFilter(logging.Filter):
     """Clear or restore the exception on log records"""
-
-    def __init__(self, clear=True):
-        self.clear = clear
-        super().__init__()
+    # This is a bit of a hack and should be applied to the last handler only
 
     def filter(self, record):
-        if self.clear:
-            record._exc_info_hidden, record.exc_info = record.exc_info, None
-            # clear the exception traceback text cache, if created.
-            record.exc_text = None
-        elif hasattr(record, "_exc_info_hidden"):
-            record.exc_info = record._exc_info_hidden
-            del record._exc_info_hidden
+        record._exc_info_hidden, record.exc_info = record.exc_info, None
+        # clear the exception traceback text cache, if created.
+        record.exc_text = None
+
         return True
 
-def logsetup(args):
+def logfile_handler(args, user, logpath):
     """Setup logging both to logpath and stderr"""
+    logger  = logging.getLogger()
 
-    logpath = "/tmp/dbcollect.log"
+    logger.setLevel(logging.DEBUG)
+
+    filehandler = logging.FileHandler(filename=logpath, mode='w')
+    filehandler.setLevel(logging.DEBUG)
+    filehandler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)-8s : %(message)s', datefmt='%Y-%m-%d-%H:%M:%S'))
 
     try:
-        logging.basicConfig(filename=logpath,
-            filemode = 'w',
-            level    = logging.DEBUG,
-            format   = "%(asctime)s:%(levelname)-8s: %(message)s",
-            datefmt  = '%Y-%m-%d %I:%M:%S')
+        uid = pwd.getpwnam(user).pw_uid
+        gid = pwd.getpwnam(user).pw_gid
+        os.chown(logpath, uid, gid)
 
-        handler = logging.StreamHandler()
-        handler.addFilter(TracebackInfoFilter())
-        handler.setFormatter(logging.Formatter('%(levelname)-8s : %(message)s', datefmt='%Y-%m-%d-%H:%M:%S'))
+    except OSError:
+        pass
 
-        if args.debug:
-            handler.setLevel(logging.DEBUG)
-        elif args.quiet:
-            handler.setLevel(logging.ERROR)
-        else:
-            handler.setLevel(logging.INFO)
+    logger.addHandler(filehandler)
 
-        logging.getLogger().addHandler(handler)
+    # Add filter to console handler
+    consolehandler = logger.handlers[0]
+    consolehandler.addFilter(TracebackInfoFilter())
 
-    except Exception as e:
-        logging.fatal(Errors.E014, logpath, e)
-        raise
+    # swap the handler to make tracebackfilter work only on handler[1]
+    logger.removeHandler(consolehandler)
+    logger.addHandler(consolehandler)
+
+    if args.debug:
+        consolehandler.setLevel(logging.DEBUG)
+
+    elif args.quiet:
+        consolehandler.setLevel(logging.WARN)
+
+    else:
+        consolehandler.setLevel(logging.INFO)
 
 def exception_handler(func):
-    """Decorator to catch CTRL-C and other exceptions (multiprocessing)
+    """
+    Decorator to catch CTRL-C and other exceptions (multiprocessing)
     This prevents a mess of error messages from different processes
     """
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+
         except KeyboardInterrupt:
             logging.warning(Errors.W001, func.__name__)
             sys.exit(1)
-        except Exception as e:
+
+        except Exception as e: # pylint: disable=broad-exception-caught
             logging.exception(Errors.E013, func.__name__, e)
             sys.exit(99)
+
     return inner

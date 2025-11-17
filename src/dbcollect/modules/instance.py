@@ -4,9 +4,11 @@ Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
+# pylint: disable=too-many-instance-attributes,too-many-positional-arguments,too-many-arguments
+
 import json, re, logging
 
-from lib.functions import getscript
+from lib.compat import get_pkg_resource
 from lib.errors import Errors, ReportingError, SQLPlusError
 from lib.sqlplus import sqlplus
 
@@ -53,6 +55,7 @@ class Instance():
             r    = re.match(r'.*?(^{.*?^})', self.meta_txt, re.M | re.S)
             meta = r.group(1)
             self.meta = json.loads(meta)
+
         except Exception as e:
             logging.debug(e)
             logging.debug('meta.sql output:\n%s', self.meta_txt)
@@ -80,7 +83,7 @@ class Instance():
 
     def script(self, name, header=None):
         """Run SQL*Plus query and return the output. Log errors if they appear"""
-        sql = getscript(name + '.sql')
+        sql = get_pkg_resource('sql', name + '.sql')
         proc = self.sqlplus()
         if header:
             proc.stdin.write(header)
@@ -120,7 +123,7 @@ class Instance():
             logging.warning(Errors.W004, self.sid)
             return 0
         else:
-            raise ReportingError(Errors.E021, self.sid)
+            raise ReportingError(Errors.E021 % self.sid)
 
         inc_rac  = '0' if args.no_rac  else '1'
         inc_stby = '0' if args.no_stby else '1'

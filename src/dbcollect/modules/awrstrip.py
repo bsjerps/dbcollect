@@ -13,15 +13,14 @@ Sections to be removed:
 * ADDM report
 """
 
-import os, sys, re, logging
+import sys, re, logging
+from lib.compat import strerror
 from lib.errors import Errors
 
 try:
     from lxml import etree
 except ImportError:
     from xml.etree import ElementTree as etree
-
-_deleted = 'Section removed by awrstrip'
 
 def awrstrip(path, out=None, inplace=False):
     """Strip a html formatted AWR report from sections containing SQL text.
@@ -35,19 +34,26 @@ def awrstrip(path, out=None, inplace=False):
     Returns:
     None
     """
+    _deleted = 'Section removed by awrstrip'
+
     if 'lxml' not in sys.modules:
         logging.debug('python-lxml package not found, fallback to slower xml package')
+
     try:
         tree = etree.parse(path)
+
     except etree.ParseError:
         logging.error(Errors.E006, path)
         return
+
     blacklist = []
     try:
         tree_iter = tree.iter
-    except Exception:
+
+    except AttributeError:
         # Need this on Python 2.6
         tree_iter = tree.getiterator
+
     for element in tree_iter():
         if element.tag == 'table':
             # Look for tables with 'SQL' in the 'summary' attribute
@@ -61,16 +67,19 @@ def awrstrip(path, out=None, inplace=False):
             if element.text and element.text.strip().startswith('ADDM'):
                 #logging.debug('removing section "ADDM Report"')
                 blacklist.append(element)
+
     changed = False
     for elem in blacklist:
         changed = True
         elem.clear()
         elem.tag = 'h3'
         elem.text = _deleted
+
     if inplace is True:
         out = path
+
     if out and changed:
         try:
             tree.write(out, encoding="utf-8")
         except IOError as err:
-            logging.error(Errors.E007, out, os.strerror(err.errno))
+            logging.error(Errors.E007, out, strerror(err.errno))

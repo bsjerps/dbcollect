@@ -1,7 +1,12 @@
+"""
+detect.py - Detect and setup running Oracle instances
+Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
+License: GPLv3+
+"""
 import os, re, logging, pwd, grp
 
 from lib.errors import Errors, CustomException, SQLError, OracleNotAvailable, LogonDenied, SQLConnectionError, SQLPlusError, SQLTimeout
-from lib.functions import execute, getfile
+from lib.compat import load_file, load_files, execute
 from lib.sqlplus import sqlplus
 
 def sqlplus_status(args, sid, orahome, connectstring):
@@ -57,8 +62,10 @@ def sqlplus_status(args, sid, orahome, connectstring):
 
 def check_dba_group(sid, orahome):
     """Check if current user is member of the OSDBA group"""
-    config_c = getfile(os.path.join(orahome, 'rdbms/lib/config.c'))
-    if not config_c:
+    try:
+        config_c = load_file(os.path.join(orahome, 'rdbms/lib/config.c'))
+
+    except IOError:
         logging.debug('Reading config.c failed')
         return
 
@@ -75,19 +82,19 @@ def check_dba_group(sid, orahome):
     if not user_gid in user_groups:
         logging.warning(Errors.W011, sid, user, dba_group)
 
-def check_orahome(args, orahome):
+def check_orahome(orahome):
     """Check if orahome is a valid ORACLE_HOME"""
-    crsctl  = os.path.join(orahome, 'bin', 'crsctl')
-    sqlplus = os.path.join(orahome, 'bin', 'sqlplus')
+    crsctl_bin  = os.path.join(orahome, 'bin', 'crsctl')
+    sqlplus_bin = os.path.join(orahome, 'bin', 'sqlplus')
 
-    if os.path.isfile(crsctl):
+    if os.path.isfile(crsctl_bin):
         # This is a grid home
         logging.debug('Skipping %s (is GRID_HOME)', orahome)
         return False
 
-    if not os.path.isfile(sqlplus):
+    if not os.path.isfile(sqlplus_bin):
         # This is another oracle_home type (i.e. oraagent) - not usable
-        logging.debug('Skipping ORACLE_HOME %s (no sqlplus executable %s)', orahome, sqlplus)
+        logging.debug('Skipping ORACLE_HOME %s (no sqlplus executable %s)', orahome, sqlplus_bin)
         return False
 
     return True
@@ -97,45 +104,48 @@ def get_orahome(args, sid):
     if args.orahome:
         # Use args first
         for orahome in args.orahome.split(','):
-            if check_orahome(args, orahome):
+            if check_orahome(orahome):
                 yield orahome
 
     if not args.no_oratab:
         # if entry is in oratab, use it
-        oratab = getfile('/etc/oratab','/var/opt/oracle/oratab')
-        if not oratab:
+        try:
+            oratab = load_files('/etc/oratab','/var/opt/oracle/oratab')
+        except IOError:
             logging.error(Errors.E018)
 
         else:
             r = re.search(r'^{0}:(\S+):[y|Y|n|N]'.format(sid), oratab, re.M)
             if r:
                 orahome = r.group(1)
-                if check_orahome(args, orahome):
+                if check_orahome(orahome):
                     yield orahome
             else:
                 logging.debug('%s not found in oratab', sid)
 
     if not args.no_orainv:
         # Alternatively, get all inventory candidates
-        orainstloc = getfile('/etc/oraInst.loc','/var/opt/oracle/oraInst.loc')
+        orainstloc = load_files('/etc/oraInst.loc','/var/opt/oracle/oraInst.loc')
         if not orainstloc:
             logging.error(Errors.E016)
         else:
             r = re.match(r'inventory_loc=(.*)', orainstloc)
             if r:
                 inventory_path = os.path.join(r.group(1), 'ContentsXML/inventory.xml')
-                inventory = getfile(inventory_path)
-                if not inventory:
+                try:
+                    inventory = load_file(inventory_path)
+                except IOError:
                     logging.warning(Errors.E017, inventory_path)
 
                 else:
                     for orahome in re.findall(r"<HOME NAME=\"\S+\"\sLOC=\"(\S+)\"", inventory):
-                        if check_orahome(args, orahome):
+                        if check_orahome(orahome):
                             yield orahome
             else:
                 logging.error(Errors.E016)
 
 def try_connect(args, sid, connectstring=None):
+    """Try to connect to the instance using all oracle_home candidates and methods"""
     orahomes = []
     for orahome in get_orahome(args, sid):
         # Check if orahome is used before on this instance
@@ -166,7 +176,7 @@ def try_connect(args, sid, connectstring=None):
         except SQLError as e:
             logging.warning(Errors.W016, sid, orahome, *e.args)
 
-    raise SQLConnectionError(Errors.E027, sid)
+    raise SQLConnectionError(Errors.E027 % sid)
 
 def get_instances(args):
     """Gets all running sids with a valid ORACLE_HOME, return (sid, oracle_home) pairs"""
@@ -183,11 +193,11 @@ def get_instances(args):
     if args.logons:
         # Connect to services listed in the connect file
         logging.warning(Errors.W015)
-        connects = open(args.logons).read()
+        connects = load_file(args.logons)
         for connectstring in re.findall(r'^(\w+\/\S+@\S+/\S+)', connects, re.M):
             r = re.match(r'^\w+\/\S+@\S+/(\S+)', connectstring)
             if not r:
-                raise CustomException(Errors.E043, args.connect)
+                raise CustomException(Errors.E043 % args.connect)
 
             sid = r.group(1)
             orahome = try_connect(args, sid, connectstring)
@@ -196,8 +206,8 @@ def get_instances(args):
     else:
         # get all sids and try to connect
         logging.info('Detecting running Oracle instances')
-        ps_out, _, _ = execute('ps -eo pid,user,group,args')
-        for pid, user, group, sid in re.findall(r'(\d+)\s+(\w+)\s+(\w+)\s+ora_pmon_(.*)', ps_out):
+        ps_out = execute('ps -eo pid,user,group,args')
+        for pid, user, group, sid in re.findall(r'(\d+)\s+(\w+)\s+(\w+)\s+ora_pmon_(.*)', ps_out.stdout):
             logging.info('Detected running instance %s, pid=%s, user=%s, group=%s', sid, pid, user, group)
             if sid in excluded:
                 logging.warning(Errors.W013, sid)
@@ -214,4 +224,3 @@ def get_instances(args):
         logging.info('Instances detected: %s', ', '.join(instlist))
 
     return instances
-                

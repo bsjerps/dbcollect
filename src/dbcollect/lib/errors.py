@@ -4,16 +4,22 @@ Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
+# pylint: disable=line-too-long,unused-variable
+
+
 class LogonDenied(Exception):
     pass
 
 class OracleNotAvailable(Exception):
     pass
 
-class CustomException(Exception):
+class DBWorkerFailed(Exception):
     pass
 
-class ZipCreateError(CustomException):
+class DBCollectFailed(Exception):
+    pass
+
+class CustomException(Exception):
     pass
 
 class ReportingError(CustomException):
@@ -100,8 +106,8 @@ class Errors():
     E042 = "[DBC-E042] %s: No valid ORACLE_HOME found (see logfile)"
     E043 = "[DBC-E043] Bad connectstring format: %s"
     E044 = "[DBC-E044] Command not found in $PATH: %s"
-    E045 = "[DBC-E045] sudo failed for user %s (%s)"
-    E046 = "[DBC-E046] cannot write sudoers file %s"
+    E045 = "[DBC-E045] Timeout on sending root tasks (Queue Full)"
+    E046 = "[DBC-E046] Timeout on receiving root tasks (Queue Empty)"
 
 class ErrorHelp():
     @classmethod
@@ -111,8 +117,9 @@ class ErrorHelp():
             helpmsg = getattr(Errors, err)
             helptxt = getattr(ErrorHelp, err)
             print(helptxt)
+
         except AttributeError:
-            print('No help message available for error {0}'.format(m))
+            print('No help message available for error {0}'.format(err))
 
     W001 =  "A subprocess was aborted due to a keyboard interrupt (CTRL-C).\n\n" \
             "Solution:\n\nIf dbcollect was aborted, restart it with the correct parameters."
@@ -247,3 +254,6 @@ class ErrorHelp():
             "The format for each line should be <user>/<password>//<hostname or fqdn>/<service>. For example: \n\n" \
             "dbsnmp/secret1234@//example.com/orcl\n\n"
     E044 =  "The listed command is not found in $PATH (/usr/sbin:/usr/bin:/bin:/sbin).\n\n"
+    E045 =  "The process that runs tasks as root could not send the task results to the receiver. This should not happen and indicates a bug or other problem"
+    E046 =  "No more task results could be received but the sender did not complete successfully. Can be a side effect of a long running (root) process."
+

@@ -5,13 +5,15 @@ License: GPLv3+
 """
 
 import os, sys, re, time, logging
-
-from multiprocessing.queues import Full
+try:
+    from queue import Full
+except ImportError:
+    from Queue import Full
 
 from lib.errors import Errors, SQLError, SQLTimeout
-from lib.functions import getscript
+from lib.compat import Progress, load_file, get_pkg_resource
 from lib.config import dbinfo_config
-from lib.jsonfile import JSONFile
+from lib.jsonfile import JSONPlusDBInfo
 from lib.log import exception_handler
 
 class Session():
@@ -36,7 +38,7 @@ class Session():
 
     def send(self, s):
         """Send command to SQLPlus and log to logfile"""
-        with open(self.logfile, 'a') as f:
+        with open(self.logfile, 'a') as f: # pylint: disable=unspecified-encoding
             f.write(s)
         self.proc.stdin.write(s)
 
@@ -70,8 +72,8 @@ class Session():
 
             if self.proc.returncode is not None:
                 try:
-                    with open(spoolfile) as f:
-                        data = f.read()
+                    data = load_file(spoolfile)
+
                 except (OSError, IOError):
                     data = ''
 
@@ -117,26 +119,20 @@ class Session():
 
     def dbinfo(self):
         """ Run DBInfo scripts"""
-        logging.info('{0}: Running opatch lspatches'.format(self.sid))
-        header = getscript('dbinfo/header.sql')
-
-        # Get ORACLE_HOME patch info
-        lspatches_cmd  = '{0} lspatches'.format(os.path.join(self.instance.orahome, 'OPatch/opatch'))
-        inventory_info = JSONFile()
-        inventory_info.execute(lspatches_cmd)
-        inventory_info.save(os.path.join(self.tempdir, 'dbinfo', '{0}_patches.jsonp'.format(self.sid)))
-
-        # Get Listener services
-        listener_cmd  = '{0} status'.format(os.path.join(self.instance.orahome, 'bin/lsnrctl'))
-        listener_info = JSONFile()
-        listener_info.execute(listener_cmd, ORACLE_HOME=self.instance.orahome)
-        listener_info.save(os.path.join(self.tempdir, 'dbinfo', '{0}_listener.jsonp'.format(self.sid)))
-
         logging.info('{0}: Running dbinfo scripts'.format(self.sid))
-        for scriptname in self.genscripts():
-            logging.debug('{0}: Running dbinfo script {1}'.format(self.sid, scriptname))
 
-            query    = getscript('dbinfo/{0}'.format(scriptname))
+        progress = Progress(self.args)
+        header   = get_pkg_resource('sql', 'dbinfo/header.sql')
+
+        for scriptname in self.genscripts():
+            if self.args.skip_sql and scriptname in self.args.skip_sql.split(','):
+                logging.debug('%s: Skipping dbinfo script %s (--skip-sql)', self.sid, scriptname)
+                continue
+
+            msg = '{0}: Running dbinfo script {1}'.format(self.sid, scriptname)
+            progress.message(msg)
+
+            query    = get_pkg_resource('sql', 'dbinfo/{0}'.format(scriptname))
             filename = '{0}_{1}'.format(self.sid, scriptname.replace('.sql','.txt'))
             savename = '{0}_{1}'.format(self.sid, scriptname.replace('.sql','.jsonp'))
 
@@ -144,8 +140,7 @@ class Session():
             try:
                 elapsed, rc, status, outfile = self.run(scriptname, query, filename=filename, header=header)
                 # Create JSONPlus file
-                jsonfile = JSONFile(elapsed=elapsed, status=status, returncode=rc)
-                jsonfile.dbinfo(self.instance, scriptname, outfile)
+                jsonfile = JSONPlusDBInfo(self.instance, outfile, script=scriptname, elapsed=elapsed, status=status, returncode=rc)
                 jsonfile.save(os.path.join(self.tempdir, 'dbinfo', savename))
 
             except SQLTimeout as e:
@@ -172,12 +167,15 @@ def job_generator(shared):
     try:
         for job in shared.instance.jobs:
             shared.jobs.put(job, timeout=timeout)
+
     except Full:
         logging.error(Errors.E011, shared.instance.sid, timeout)
         sys.exit(11)
-    except Exception as e:
+
+    except Exception as e: # pylint: disable=broad-exception-caught
         logging.exception(Errors.E001, e)
         sys.exit(20)
+
     finally:
         # Set the done flag even if failed
         shared.done.set()
@@ -201,7 +199,7 @@ def job_processor(shared, n):
         except (SQLError, SQLTimeout) as e:
             logging.error(*e.args)
             break
-        
+
         # Move the completed AWR/SP file to the awr dir
         tgtfile = os.path.join(shared.tempdir, 'awr', job.filename)
         os.rename(spoolfile, tgtfile)
