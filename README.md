@@ -60,7 +60,7 @@ python3 ~/bin/dbcollect -V
 
 ### Manual install
 
-* Download latest dbcollect: [latest dbcollect version](https://github.com/sjerpb/dbcollect/releases/latest/download/dbcollect)
+* Download latest dbcollect: [latest dbcollect version](https://github.com/bsjerps/dbcollect/releases/latest/download/dbcollect)
 * Move it to ```/usr/local/bin``` (if you are root) or ```$HOME/bin``` (if you are not root)
 * Make it executable: ```chmod 755 /usr/local/bin/dbcollect```
 * Test if it works (run with help option): ```dbcollect -V```
