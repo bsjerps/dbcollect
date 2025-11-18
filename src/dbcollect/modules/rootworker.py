@@ -116,13 +116,13 @@ def run_root_commands(args, rootqueue):
     progress.clear()
 
 def root_worker(args, exchange):
-    # check if user is root and root commands are not disabled
-
+    # Wait for signal from dbcollect worker
     ready = exchange.ready.wait(10)
-    if ready is False:
-        logging.info('Not Ready')
+    if ready is not True:
+        logging.error(Errors.E047)
         return
 
+    # check if user is root and root commands are not disabled
     if args.no_root:
         logging.info('Skipping root commands (--no-root)')
         exchange.queue.put(None, timeout=ROOTQUEUE_TIMEOUT)

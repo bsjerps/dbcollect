@@ -108,6 +108,7 @@ class Errors():
     E044 = "[DBC-E044] Command not found in $PATH: %s"
     E045 = "[DBC-E045] Timeout on sending root tasks (Queue Full)"
     E046 = "[DBC-E046] Timeout on receiving root tasks (Queue Empty)"
+    E047 = "[DBC-E047] Timeout on waiting for collector, cannot send root tasks"
 
 class ErrorHelp():
     @classmethod

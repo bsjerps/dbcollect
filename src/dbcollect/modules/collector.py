@@ -77,7 +77,7 @@ def collect_wrapper(args):
         exchange.drain()
 
         if proc_dbc.exitcode:
-            raise DBWorkerFailed('%s' % proc_dbc.exitcode)
+            raise DBWorkerFailed('DB Worker failed, rc=%s' % proc_dbc.exitcode)
 
     except KeyboardInterrupt:
         logging.fatal(Errors.E002)
@@ -126,6 +126,7 @@ def dbcollect_worker(args, exchange, user):
             archive = Archive(args)
 
         except (OSError, IOError) as e:
+            logging.error(Errors.E007, e.filename, strerror(e.errno))
             logging.critical(Errors.E003, e.filename)
             sys.exit(10)
 
