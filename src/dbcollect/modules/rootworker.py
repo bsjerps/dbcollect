@@ -118,7 +118,7 @@ def run_root_commands(args, rootqueue):
 def root_worker(args, exchange):
     # Wait for signal from dbcollect worker
     ready = exchange.ready.wait(10)
-    if ready is not True:
+    if ready is False:
         logging.error(Errors.E047)
         return
 
