@@ -1,6 +1,6 @@
 **Ansible Playbook to run dbcollect**
 
-The Ansible playbook dbcollect.yml runs https://github.com/outrunnl/dbcollect on
+The Ansible playbook dbcollect.yml runs https://github.com/bsjerps/dbcollect on
 a couple of hosts and copies the resulting zip files over to the local system.
 By default the zip files are stored in the local subdirectory collects/ which is
 removed during every run of the playbook. Please make sure to rename an existing
@@ -33,7 +33,7 @@ http_proxy			Define the proxy to use for downloads. Defaults
 				to "" for no proxy required.
 
 For details about the downloading mechanism of dbcollect please see
-https://github.com/outrunnl/dbcollect/blob/master/INSTRUCTIONS.md
+https://github.com/bsjerps/dbcollect/blob/master/INSTRUCTIONS.md
 Hint: the playbook implements the **Easy way**
 
 The playbook defaults to run on all hosts defined in the file `hosts`. As the

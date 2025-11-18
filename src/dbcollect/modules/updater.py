@@ -11,7 +11,7 @@ except ImportError:
 import os, sys, json, logging
 from shutil import move
 
-_apiurl  = 'https://api.github.com/repos/outrunnl/dbcollect/releases/latest'
+_apiurl  = 'https://api.github.com/repos/bsjerps/dbcollect/releases/latest'
 _tmpfile = '/tmp/dbcollect'
 _target  = '/usr/local/bin/dbcollect'
 

@@ -1,6 +1,6 @@
 ################################################################################
 #
-#  Ansible Playbook to run https://github.com/outrunnl/dbcollect
+#  Ansible Playbook to run https://github.com/bsjerps/dbcollect
 #  on a group of Oracle DB servers
 #
 #  Usage: ansible-playbook -i hosts dbcollect.yml [-e "var=value ..."]
@@ -62,7 +62,7 @@
 
         - name: "get the latest version of dbcollect"
           get_url:
-            url: "https://github.com/outrunnl/dbcollect/releases/latest/download/dbcollect"
+            url: "https://github.com/bsjerps/dbcollect/releases/latest/download/dbcollect"
             dest: "./{{ dbcollect }}"
 
         - name: "copy dbcollect to target"
@@ -92,7 +92,7 @@
 
     - name: "execute dbcollect"
       ansible.builtin.shell:
-        cmd: "{{ dbcollect }} -o {{ parameters }}"
+        cmd: "{{ dbcollect }} {{ parameters }}"
 
     - name: "remove dbcollect from host"
       file:

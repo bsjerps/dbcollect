@@ -4,7 +4,7 @@ download - download and install the latest release of dbcollect to /usr/local/bi
 
 Script that can be run directly from github to install dbcollect.
 Usage:
-curl https://raw.githubusercontent.com/outrunnl/dbcollect/master/scripts/download | python
+curl https://raw.githubusercontent.com/bsjerps/dbcollect/master/scripts/download | python
 
 To keep things simple, there is only very basic exception handling.
 Move the downloaded dbcollect to /usr/local/bin or $HOME/bin after downloading if
@@ -20,7 +20,7 @@ try:
 except ModuleNotFoundError:
     from urllib.request import urlopen, Request, HTTPError
 
-apiurl = 'https://api.github.com/repos/outrunnl/dbcollect/releases/latest'
+apiurl = 'https://api.github.com/repos/bsjerps/dbcollect/releases/latest'
 
 def retrieve(url):
     """Retrieve the raw data from a url"""

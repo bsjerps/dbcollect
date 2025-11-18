@@ -1,7 +1,7 @@
 DBCollect - Oracle Database Info Collector
 ======================
 
-![logo](https://github.com/outrunnl/dbcollect/blob/master/artwork/dbcollect-logo.png)
+![logo](https://github.com/bsjerps/dbcollect/blob/master/artwork/dbcollect-logo.png)
 
 
 ## Wiki Manuals
@@ -34,7 +34,7 @@ This sets up dbcollect in /usr/local/bin for all users.
 
 ```
 # Setup dbcollect
-curl -L https://github.com/outrunnl/dbcollect/releases/latest/download/dbcollect -o /usr/local/bin/dbcollect && chmod 755 /usr/local/bin/dbcollect
+curl -L https://github.com/bsjerps/dbcollect/releases/latest/download/dbcollect -o /usr/local/bin/dbcollect && chmod 755 /usr/local/bin/dbcollect
 
 # Test functionality
 dbcollect -V
@@ -49,7 +49,7 @@ alternatives --set python /usr/bin/python3
 mkdir -p $HOME/bin
 
 # Setup DBCollect
-curl -L https://github.com/outrunnl/dbcollect/releases/latest/download/dbcollect -o $HOME/bin/dbcollect && chmod 755 $HOME/bin/dbcollect
+curl -L https://github.com/bsjerps/dbcollect/releases/latest/download/dbcollect -o $HOME/bin/dbcollect && chmod 755 $HOME/bin/dbcollect
 
 # Test functionality
 dbcollect -V
@@ -60,11 +60,11 @@ python3 ~/bin/dbcollect -V
 
 ### Manual install
 
-* Download latest dbcollect: [latest dbcollect version](https://github.com/outrunnl/dbcollect/releases/latest/download/dbcollect)
+* Download latest dbcollect: [latest dbcollect version](https://github.com/sjerpb/dbcollect/releases/latest/download/dbcollect)
 * Move it to ```/usr/local/bin``` (if you are root) or ```$HOME/bin``` (if you are not root)
 * Make it executable: ```chmod 755 /usr/local/bin/dbcollect```
 * Test if it works (run with help option): ```dbcollect -V```
-* Collect the data: ```dbcollect -o```
+* Collect the data: ```dbcollect```
 * Get and upload the dbcollect ZIP datafile (```/tmp/dbcollect-<hostname>.zip```)
 
 ## Info collected by dbcollect:
@@ -80,6 +80,7 @@ python3 ~/bin/dbcollect -V
 - Linux: CPU, memory, disks, network interfaces etc
 - AIX, Solaris (SPARC): CPU, memory, limited other info
 - SAR: Binary SAR files (Linux) or SAR reports (UNIX) (Linux SAR provides much more detail)
+- Process accounting summaries (Linux only)
 - HP/UX: Experimental support
 - Windows: Not yet supported (TBD)
 
@@ -114,6 +115,8 @@ More info on Oracle feature usage: [Oracle Feature Usage](https://oracle-base.co
 
 DBCollect now supports AIX and Solaris systems, and HP-UX has experimental support. You need to have Python installed (at least version 2.6).
 
+Running _dbcollect_ directly may not work, then run it with ```python3 /usr/local/bin <options>```
+
 Windows is not (yet) supported.
 
 ## Requirements
@@ -125,7 +128,7 @@ See [Dirty Cache Wiki - DBCollect/Install](https://wiki.dirty-cache.com/DBCollec
 - Backup files, logs etc may no longer exist but still be reported, depending on backup catalog accuracy. Best effort.
 - Very long names for files, tablespaces, disk groups etc may be truncated/wrapped
 - Very large sized elements or very large amounts of objects may result in `####` notation and no longer be useful. Limits have been increased to insane values so this should not be a problem
-- Newer Oracle versions (20c and up) may cause unreliable numbers, not yet tested
+- Newer Oracle versions (23 and up) may cause unreliable numbers, not yet tested
 - Oracle RAC sometimes is very slow with generating AWR reports. Known issue. Be patient. See [Dirty Cache Wiki - DBCollect Troubleshooting](https://wiki.dirty-cache.com/DBCollect/Troubleshooting)
 
 ## Safety

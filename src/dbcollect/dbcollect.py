@@ -39,9 +39,9 @@ def main():
     parser.add_argument("-V", "--version",    action="store_true",        help="Version and copyright info")
     parser.add_argument("-D", "--debug",      action="store_true",        help="Debug (Show errors)")
     parser.add_argument("-q", "--quiet",      action="store_true",        help="Suppress output")
+    parser.add_argument(      "--update",     action="store_true",        help="Check for updates")
     parser.add_argument("-u", "--user",       type=str,                   help="Switch to user (if run as root)")
     parser.add_argument(      "--filename",   type=str,                   help="output filename, default dbcollect-<hostname>.zip")
-    parser.add_argument(      "--update",     action="store_true",        help="Check for updates")
     parser.add_argument(      "--tempdir",    type=str, default='/tmp',   help="TEMP directory, default /tmp")
     parser.add_argument("-d", "--days",       type=int, default=10,       help="Number of days ago to START collect of AWR data (default 10, max 999)")
     parser.add_argument(      "--end_days",   type=int, default=0,        help="Number of days ago to END AWR collect period, default 0, max 999")
@@ -98,5 +98,5 @@ def main():
             sys.exit(50)
 
 if __name__ == "__main__":
-    print('dbcollect must run from a ZipApp package, use https://github.com/outrunnl/dbcollect/releases/latest')
+    print('dbcollect must run from a ZipApp package, use https://github.com/bsjerps/dbcollect/releases/latest')
     sys.exit(10)
