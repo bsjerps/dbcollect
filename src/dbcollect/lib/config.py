@@ -12,13 +12,14 @@ versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
     'copyright': "Copyright 2025, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html",
-    'version': "1.18.8"
+    'version': "1.20.0"
 }
 
 dbinfo_config = {
     'basic': [
         'instance.sql',
         'database.sql',
+        'sgainfo.sql',
         'rac.sql',
         'session_privileges.sql',
         'tbl_privileges.sql',

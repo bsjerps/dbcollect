@@ -129,7 +129,7 @@ def root_worker(args, exchange):
 
     elif os.getuid() != 0:
         logging.info('Not running as root, skipping root commands')
-        exchange.put(None, timeout=ROOTQUEUE_TIMEOUT)
+        exchange.queue.put(None, timeout=ROOTQUEUE_TIMEOUT)
 
     else:
         try:
