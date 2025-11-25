@@ -84,9 +84,6 @@ def drop_user(user):
     os.setgroups(groups)
     os.setuid(uid)
 
-    # Set working directory
-    os.chdir('/tmp')
-
     # Set file creation mask
     os.umask(0o0022)
 
