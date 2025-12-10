@@ -12,7 +12,7 @@ versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
     'copyright': "Copyright 2025, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html",
-    'version': "1.20.3"
+    'version': "1.20.4"
 }
 
 dbinfo_config = {
@@ -36,6 +36,7 @@ dbinfo_config = {
         'bctracking.sql',
         'flashback.sql',
         'banner.sql',
+        'resource_limits.sql',
     ],
     'common': [
         'rmanconfig.sql',
@@ -107,6 +108,7 @@ linux_config = {
         'systemctl_units': 'systemctl list-units',
         'systemctl_timers': 'systemctl list-timers',
         'sysstat_timer': 'systemctl show sysstat-collect.timer',
+        'multipath_t': 'multipath -t',
     },
     'rootcommands': {
         'multipath_ll': 'multipath -ll',

@@ -5,6 +5,7 @@ License: GPLv3+
 """
 
 import os, logging
+from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from lib.compat import strerror
@@ -38,7 +39,8 @@ class Archive():
                 args.filename += '.zip'
             return os.path.join('/tmp', args.filename)
 
-        return os.path.join('/tmp', 'dbcollect-{0}.zip'.format(self.prefix))
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+        return os.path.join('/tmp', 'dbcollect-{0}-{1}.zip'.format(self.prefix, timestamp))
 
     def __del__(self):
         if hasattr(self, 'zip'):
