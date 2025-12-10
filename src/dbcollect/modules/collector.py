@@ -52,6 +52,7 @@ def collect_wrapper(args):
             logging.info('dbcollect {0} - database and system info collector'.format(versioninfo['version']))
             logging.info('For diagnosing errors, use --error option. More info on https://wiki.dirty-cache.com/DBCollect/Troubleshooting')
             logging.info('Python version {0}'.format(platform.python_version()))
+            logging.info('Calling user is {0}'.format(username()))
 
         except IOError as e:
             logging.critical(Errors.E007, DBCOLLECT_LOG, strerror(e.errno))
@@ -116,7 +117,7 @@ def dbcollect_worker(args, exchange, user):
         logging.info('Current user is {0}'.format(username()))
         logging.info('Command line is {0}'.format(' '.join(sys.argv)))
         try:
-            osname = load_file('/etc/system-releasee')
+            osname = load_file('/etc/system-release')
         except IOError:
             osname = 'Unknown'
         logging.info('OS version is {0}'.format(osname.strip()))
