@@ -103,7 +103,7 @@ def oracle_info(archive, args):
                 msg = 'Report {0} of {1} ({2:.1%} done), elapsed: {3}, remaining: {4}, reports/s: {5:.2f}'.format(
                         done_jobs, total_jobs, pct_done, elapsed_s, eta_s, rps)
 
-                progress.message(msg)
+                progress.message(msg, debug=False)
 
         for worker in workers:
             worker.join()

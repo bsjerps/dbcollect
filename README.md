@@ -20,7 +20,7 @@ the output of some system commands, as well as AWR or Statspack reports for each
 database instance, and other database information.
 
 The results are collected in a ZIP file named (default):
-`/tmp/dbcollect-<hostname>.zip`
+`/tmp/dbcollect-<hostname>-<timestamp>.zip`
 
 For LiveOptics and Dell's Workload Analyzer, the per-database directories in the ZIP file contain all files you need to upload to the reporting tools.
 

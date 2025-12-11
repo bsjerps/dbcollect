@@ -16,6 +16,7 @@ try:
     from lib.jsonfile import buildinfo
     from modules.collector import collect_wrapper
     from modules.updater import update
+    from modules.tools import cleanup_archives, run_sql, completions
 
 except ImportError as e:
     print(e)
@@ -35,13 +36,18 @@ def printversion():
     print ('Buildhash: {0}'.format(buildinfo['buildhash']))
 
 def main():
-    parser = argparse.ArgumentParser(usage='dbcollect [options]')
+    def formatter(prog):
+        return argparse.HelpFormatter(prog, width=120)
+
+    parser = argparse.ArgumentParser(usage='dbcollect [options]', formatter_class=formatter)
     parser.add_argument("-V", "--version",    action="store_true",        help="Version and copyright info")
     parser.add_argument("-D", "--debug",      action="store_true",        help="Debug (Show errors)")
     parser.add_argument("-q", "--quiet",      action="store_true",        help="Suppress output")
+    parser.add_argument(      "--complete",   action="store_true",        help="Bash completions. Run \"source <(dbcollect --complete)\"")
     parser.add_argument(      "--update",     action="store_true",        help="Check for updates")
     parser.add_argument("-u", "--user",       type=str,                   help="Switch to user (if run as root)")
-    parser.add_argument(      "--filename",   type=str,                   help="output filename, default dbcollect-<hostname>.zip")
+    parser.add_argument(      "--filename",   type=str,                   help="output filename, default dbcollect-<hostname>-<timestamp>.zip")
+    parser.add_argument(      "--cleanup",    action="store_true",        help="Remove old dbcollect zipfiles from /tmp")
     parser.add_argument(      "--tempdir",    type=str, default='/tmp',   help="TEMP directory, default /tmp")
     parser.add_argument("-d", "--days",       type=int, default=10,       help="Number of days ago to START collect of AWR data (default 10, max 999)")
     parser.add_argument(      "--end_days",   type=int, default=0,        help="Number of days ago to END AWR collect period, default 0, max 999")
@@ -63,6 +69,7 @@ def main():
     parser.add_argument(      "--no-oratab",  action="store_true",        help="Ignore ORACLE_HOMES from oratab")
     parser.add_argument(      "--no-timeout", action="store_true",        help="Don't abort on SQL*Plus timeout when detecting instances")
     parser.add_argument(      "--nmon",       type=str,                   help="Where to look for NMON files (comma separated)", metavar='PATH')
+    parser.add_argument(      "--script",     type=str,                   help="Write SQL script to /tmp for usage with SQL*Plus", metavar='SCRIPT')
     parser.add_argument(      "--skip-sql",   type=str,                   help="Skip SQL scripts (comma separated)", metavar='SCRIPTS')
     parser.add_argument(      "--skip-cmd",   type=str,                   help="Skip OS commands (comma separated)", metavar='COMMANDS')
     parser.add_argument(      "--include",    type=str,                   help="Include Oracle instances (comma separated)", metavar='INSTANCES')
@@ -72,7 +79,7 @@ def main():
     parser.add_argument(      "--error",      type=str,                   help="Get info on error, warning or informational message (i.e., E001)", metavar='<error>')
     args = parser.parse_args()
 
-    if not args.quiet:
+    if not (args.quiet or args.script or args.complete or args.error):
         print('dbcollect {0} - collect Oracle AWR/Statspack, database and system info'.format(versioninfo['version']))
         sys.stdout.flush()
 
@@ -81,6 +88,15 @@ def main():
 
     elif args.update:
         update(versioninfo['version'])
+
+    elif args.cleanup:
+        cleanup_archives(args)
+
+    elif args.complete:
+        completions(args)
+
+    elif args.script:
+        run_sql(args)
 
     elif args.error:
         ErrorHelp.help(args.error)

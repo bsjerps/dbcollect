@@ -49,8 +49,8 @@ class Progress():
             sys.stdout.write('\033[2K\033[G')
             sys.stdout.flush()
 
-    def message(self, msg):
-        if msg:
+    def message(self, msg, debug=True):
+        if msg and debug:
             logging.debug(msg)
 
         if self.quiet is True:

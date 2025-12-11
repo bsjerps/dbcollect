@@ -113,6 +113,12 @@ class Errors():
 class ErrorHelp():
     @classmethod
     def help(cls, err):
+        if err == 'list':
+            for error in dir(Errors):
+                if not error.startswith(('E','W')):
+                    continue
+                print(error)
+            return
         err = err.replace('DBC-','').upper()
         try:
             helpmsg = getattr(Errors, err)
