@@ -98,10 +98,10 @@ class Instance():
     def get_jobs(self, args):
         """Get the AWR or Statspack parameters and create jobs, return number of jobs"""
         if args.no_awr:
-            return 0
+            return
         if not self.status == 'OPEN':
             logging.info('Instance {0} not open, continue...'.format(self.sid))
-            return 0
+            return
 
         if args.statspack and self.spusage > 0:
             reptype = 'sp'
@@ -111,7 +111,7 @@ class Instance():
             reptype = 'awr'
             logging.info('{0}: AWR usage detected, generating reports '.format(self.sid))
 
-        elif args.force_awr:
+        elif args.license_ok:
             reptype = 'awr'
             logging.warning(Errors.W002, self.sid)
 
@@ -119,15 +119,12 @@ class Instance():
             reptype = 'sp'
             logging.info('{0}: No awr, Statspack detected'.format(self.sid))
 
-        elif args.ignore_awr:
-            logging.warning(Errors.W004, self.sid)
-            return 0
         else:
             raise ReportingError(Errors.E021 % self.sid)
 
         inc_rac  = '0' if args.no_rac  else '1'
         inc_stby = '0' if args.no_stby else '1'
-        inc_pack = '1' if args.force_awr else '0'
+        inc_pack = '1' if args.license_ok else '0'
         header = 'define days = {0}\ndefine end_days = {1}\ndefine inc_rac = {2}\ndefine inc_stby = {3}\ndefine inc_pack = {4}\n'.format(args.days, args.end_days, inc_rac, inc_stby, inc_pack)
         if reptype == 'awr':
             data   = self.script('getawrs', header=header)

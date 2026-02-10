@@ -9,10 +9,10 @@ Run as you would run dbcollect, including parameters, then pipe to bash, for exa
 
 (as root)
 # check output
-dbcollect_multi -o --force-awr 
+dbcollect_multi -o --license-ok 
 
 # run sequentially
-dbcollect_multi -o --force-awr | bash
+dbcollect_multi -o --license-ok | bash
 
 Note there now will be multiple DBCollect ZIP files. We need all of them.
 

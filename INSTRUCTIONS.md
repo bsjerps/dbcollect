@@ -100,7 +100,7 @@ In the majority of cases, simply run _dbcollect_ and it will run with default op
 
 ## Diagnostics Pack license
 
-Creating AWR reports requires Oracle Diagnostic Pack license. _dbcollect_ tries to detect prior usage of AWR and if this is detected, AWR reports are generated. If prior AWR usage is **not** detected, _dbcollect_ will abort with an error. If you have Diagnostic Pack license but not created AWR reports, you can force _dbcollect_ to generate AWR reports using the `--force-awr` flag (see below).
+Creating AWR reports requires Oracle Diagnostic Pack license. _dbcollect_ tries to detect prior usage of AWR and if this is detected, AWR reports are generated. If prior AWR usage is **not** detected, _dbcollect_ will abort with an error. If you have Diagnostic Pack license but not created AWR reports, you can force _dbcollect_ to generate AWR reports using the `--license-ok` flag (see below).
 
 ## Oracle RAC
 
@@ -181,15 +181,11 @@ dbcollect --logons /tmp/logons.txt
 dbcollect --orahome /u01/app/oracle/product/21.0.0/dbhome_1
 
 # Force using AWR even if license is not detected:
-dbcollect --force-awr
+dbcollect --license-ok
 # note this also picks up AWRs that have been generated with init.ora setting control_management_pack_access=NONE
 
 # Use statspack even if AWR usage is detected
 dbcollect --statspack
-
-# Don't create AWR reports for databases without previous AWR usage
-# Only use as last resort!
-dbcollect --ignore-awr
 
 # Remove all SQL code from AWR reports (not for statspack)
 dbcollect --strip

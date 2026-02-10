@@ -9,7 +9,7 @@ function _dbcollect() {
   cmd="${COMP_WORDS[1]}"
   opts1="--version --update --cleanup --error"
   opts="--user --filename --days --logons --orahome --nmon --script --skip-sql --skip-cmd --tasks --timeout --include --exclude"
-  flags="--debug --quiet --force-awr --strip --no-rac --no-stby --no-awr --no-sar --no-ora --no-sys --no-root --no-acct --no-orainv --no-oratab --no-timeout"
+  flags="--debug --quiet --license-ok --strip --no-rac --no-stby --no-awr --no-sar --no-ora --no-sys --no-root --no-acct --no-orainv --no-oratab --no-timeout"
   case $prev in
      --cleanup|--version|--update) ;;
      --error)    COMPREPLY=($(compgen -W "$(dbcollect --error list)" -- $cur)) ;;

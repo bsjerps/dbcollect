@@ -45,9 +45,9 @@ class Errors():
     Info, Warning and Error messages
     """
     W001 = "[DBC-W001] Subprocess %s interrupted"
-    W002 = "[DBC-W002] %s: No prior AWR usage detected, continuing anyway (--force-awr)"
+    W002 = "[DBC-W002] %s: No prior AWR usage detected, continuing anyway (--license-ok)"
     W003 = "[DBC-W003] Writing data to zip file failed: %s (%s)"
-    W004 = "[DBC-W004] Skipping %s: No prior AWR usage or Statspack detected (--ignore)"
+    W004 = "[DBC-W004] Skipping %s: No prior AWR usage or Statspack detected (--ignore)" # obsolete
     W005 = "[DBC-W005] Executing %s failed (%s)"
     W006 = "[DBC-W006] Reading DMI info failed (%s)"
     W007 = "[DBC-W007] Skipping %s: disabled in credentials file"
@@ -82,7 +82,7 @@ class Errors():
     E018 = "[DBC-E018] oratab not found or readable"
     E019 = "[DBC-E019] %s: Failed to run SQLPlus (%s)"
     E020 = "[DBC-E020] Zipfile already exists (try --overwrite): %s"
-    E021 = "[DBC-E021] No AWR or Statspack detected for %s (try --force-awr or --ignore)"
+    E021 = "[DBC-E021] No AWR or Statspack detected for %s (try --license-ok)"
     E022 = "[DBC-E022] Worker failed, rc=%s"
     E023 = "[DBC-E023] Job generator failed, rc=%s"
     E024 = "[DBC-E024] NMON directory not found: %s"
@@ -130,7 +130,7 @@ class ErrorHelp():
 
     W001 =  "A subprocess was aborted due to a keyboard interrupt (CTRL-C).\n\n" \
             "Solution:\n\nIf dbcollect was aborted, restart it with the correct parameters."
-    W002 =  "Informational message: DBCollect could not find prior usage of AWR reports, but the force flag was used so it continues genertating AWR reports anyway.\n\n" \
+    W002 =  "Informational message: DBCollect could not find prior usage of AWR reports, but the --license-ok flag was used so it continues genertating AWR reports anyway.\n\n" \
             "Solution:\n\nNo action required, DBcollect will proceed normally."
     W003 =  "Saving some data in the DBCollect ZIPfile failed due to (message).\n\n" \
             "Solution:\n\nNo action required, DBcollect will proceed normally."
@@ -209,7 +209,7 @@ class ErrorHelp():
             "Solution: Run dbcollect with --overwrite or -o to overwrite the existing zipfile.\n\n" \
             "Note: The /tmp/dbcollect-*.zip file contains no critical data and can be safely overwritten"
     E021 =  "DBCollect could not detect prior AWR usage and no statspack configuration for this instance.\n\nSolution:\n\n" \
-            "(Only if you have Diagnostics Pack license for the host!): Run dbcollect with --force-awr\n\n" \
+            "(Only if you have Diagnostics Pack license for the host!): Run dbcollect with --license-ok\n\n" \
             "Solution 2:\n\nSetup Statspack, wait for at least a week to generate data and rerun (if you do not have the Diagnostics license)\n\n" \
             "Solution 3:\n\nRun dbcollect with --ignore to skip performance data for all databases completely. Beware that this may lead to incomplete workload assessment results."
     E022 =  "A worker subprocess failed with the given returncode.\n\nSolution:\n\n" \

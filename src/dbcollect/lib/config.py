@@ -12,7 +12,7 @@ versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
     'copyright': "Copyright 2025, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html",
-    'version': "1.20.5"
+    'version': "1.20.6"
 }
 
 dbinfo_config = {
@@ -138,6 +138,7 @@ linux_config = {
         '/etc/issue',
         '/etc/motd',
         '/etc/multipath.conf',
+        '/etc/nsswitch.conf',
         '/etc/oratab',
     ],
 }

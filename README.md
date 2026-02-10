@@ -93,19 +93,19 @@ It can also generate Statspack reports. This is how _dbcollect_ decides which re
 
 Oracle AWR reports require Diagnostics Pack (see Oracle doc id 1490798.1).
 _dbcollect_ can not directly determine if you have this license or not - it checks the dba_feature_usage_statistics
-table whether "AWR Reports" has been used previously or not, and falls back to Statspack otherwise, unless the ```--force-awr``` flag
+table whether "AWR Reports" has been used previously or not, and falls back to Statspack otherwise, unless the ```--license-ok``` flag
 has been specified. The decision flow is as follows:
 
 1. Check if 'AWR Reports' is a feature that has been used before. If so, use AWR reports
-2. If AWR usage is not detected but the ```--force-awr``` flag has been specified, use AWR reports
-3. If AWR usage is not detected and no ```--force-awr``` flag is specified, check if STATSPACK is available. If so, use Statspack
-4. If AWR usage is not detected, no ```--force-awr``` has been specified and no statspack reports are available, but ```--ignore``` is specified, ignore and continue to the next
-5. If AWR usage is not detected, no ```--force-awr``` has been specified and no statspack reports are available, abort with an error
+2. If AWR usage is not detected but the ```--license-ok``` flag has been specified, use AWR reports
+3. If AWR usage is not detected and no ```--license-ok``` flag is specified, check if STATSPACK is available. If so, use Statspack
+4. If AWR usage is not detected, no ```--license-ok``` has been specified and no statspack reports are available, but ```--ignore``` is specified, ignore and continue to the next
+5. If AWR usage is not detected, no ```--license-ok``` has been specified and no statspack reports are available, abort with an error
 
-So if you ARE licensed for Diagnostics Pack but _dbcollect_ complains, you can run dbcollect with the --force-awr option.
+So if you ARE licensed for Diagnostics Pack but _dbcollect_ complains, you can run dbcollect with the --license-ok option.
 DBcollect will only warn about the AWR detection and just generate the reports anyway.
 
-** Use the `--force-awr` flag ONLY if you are sure you are correctly licensed! **
+** Use the `--license-ok` flag ONLY if you are sure you are correctly licensed! **
 
 If you are NOT licensed for diagnostics pack then you can use Statspack instead (see section below)
 

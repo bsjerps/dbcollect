@@ -1,0 +1,61 @@
+#!/bin/bash
+#============================================================================
+# Title       : sysstat-timer
+# Description : Set sysstat (SAR) timer interval on RHEL systems
+# Author      : Bart Sjerps <bart@dirty-cache.com>
+# License     : GPLv3+
+# Copyright   : Copyright (c) 2026 - Bart Sjerps <bart@dirty-cache.com>
+# ---------------------------------------------------------------------------
+
+setup() {
+	mkdir -p /etc/systemd/system/sysstat-collect.timer.d
+	cat <<- EOF > /etc/systemd/system/sysstat-collect.timer.d/override.conf
+	# [Timer]
+	# OnCalendar=
+	# OnCalendar=*:00/${MINUTES:-1}
+	EOF
+	cat /etc/systemd/system/sysstat-collect.timer.d/override.conf
+}
+
+reload() {
+	systemctl daemon-reload
+	systemctl restart sysstat-collect.timer
+}
+
+usage() {
+	cat <<- EOF
+	$(basename $0) [-m MINUTES] <setup|revert|dump|edit|status|restart>
+
+	    Manage sysstat (SAR) timer interval.
+
+	    -m <MINUTES> - Sets the interval in minutes (default = 1)
+
+	    setup   - installs the override file
+	    revert  - removes the override file (set to default)
+	    dump    - dumps the configuration
+	    edit    - manually edit the override file
+	    status  - show sysstat status
+	    restart - restart sysstat timer service
+
+	EOF
+}
+
+while getopts ":hm:" OPT; do
+  case "$OPT" in
+	  m)	export MINUTES=$OPTARG ;;
+   \?|h)	usage >&2 ; exit 1 ;;
+  esac
+done
+shift $(expr $OPTIND - 1)
+TARGET=$1 ; shift
+
+case $TARGET in
+	setup)   setup ; reload ;;
+	revert)  systemctl revert sysstat-collect.timer ; reload ;;
+	dump)    systemctl cat sysstat-collect.timer ;;
+	edit)    systemctl edit sysstat-collect.timer ;;
+	status)  systemctl status sysstat-collect.timer ;;
+	restart) systemctl restart sysstat-collect.timer ;;
+	"")      usage ;;
+	*)       echo Unknown action ; exit 10 ;;
+esac
