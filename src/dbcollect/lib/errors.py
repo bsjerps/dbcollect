@@ -263,4 +263,4 @@ class ErrorHelp():
     E044 =  "The listed command is not found in $PATH (/usr/sbin:/usr/bin:/bin:/sbin).\n\n"
     E045 =  "The process that runs tasks as root could not send the task results to the receiver. This should not happen and indicates a bug or other problem"
     E046 =  "No more task results could be received but the sender did not complete successfully. Can be a side effect of a long running (root) process."
-
+    E047 =  "Some subprocess took a long time causing the collector to timeout. Check the logfile."
