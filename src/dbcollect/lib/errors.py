@@ -181,8 +181,8 @@ class ErrorHelp():
     E008 =  "The OS on which DBCollect is executing is not supported.\n\nSolution: Check if the platform you run on is supported. If you think it is, file a bug report."
     E009 =  "Running an SQL*Plus script resulted in an error. DBCollect will continue.\n\nSolution:\n\nContinue processing with the missing report, or file a bug report"
     E010 =  "Running an SQL*Plus script resulted in a timeout. DBCollect will continue.\n\nSolution:" \
-            "This is most likely caused by known Oracle issues with the Recyclebin and/or DBA_FREE_SPACE.\nIf this happens when running AWR reports, see https://wiki.dirty-cache.com/AWR_Performance \nTBD... "
-    E011 =  "The job generator timed out due to extremely slow generation of AWR reports.\n\nSee https://wiki.dirty-cache.com/AWR_Performance for possible solutions."
+            "This is most likely caused by known Oracle issues with the Recyclebin and/or DBA_FREE_SPACE.\nIf this happens when running AWR reports, see https://dbcollect.dirty-cache.com/advanced/awrreports/ \nTBD... "
+    E011 =  "The job generator timed out due to extremely slow generation of AWR reports.\n\nSee https://dbcollect.dirty-cache.com/advanced/awrreports/ for possible solutions."
     E012 =  "An I/O error happened reading/writing to <file> caused DBCollect to abort.\n\nSolution:\n\n" \
             "If the I/O error is \"Permission Denied\", see if it can be fixed with chmod on the file or directory. Otherwise, submit a bug report."
     E013 =  "An unexpected error caused a worker subprocess to abort.\n\nSolution: This is a bug. Please submit a bugreport."

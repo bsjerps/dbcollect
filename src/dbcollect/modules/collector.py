@@ -50,7 +50,7 @@ def collect_wrapper(args):
         try:
             logfile_handler(args, user, DBCOLLECT_LOG)
             logging.info('dbcollect {0} - database and system info collector'.format(versioninfo['version']))
-            logging.info('For diagnosing errors, use --error option. More info on https://wiki.dirty-cache.com/DBCollect/Troubleshooting')
+            logging.info('For diagnosing errors, use --error option. More info on https://dbcollect.dirty-cache.com/guide/troubleshooting')
             logging.info('Python version {0}'.format(platform.python_version()))
             logging.info('Calling user is {0}'.format(username()))
 
