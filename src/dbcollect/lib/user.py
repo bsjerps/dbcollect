@@ -18,7 +18,7 @@ safely on systems without Oracle.
 import os, sys, re
 import pwd, grp
 
-from lib.errors import CustomException
+from lib.errors import CustomException, Errors
 from lib.compat import get_pkg_resource, execute
 
 def _get_user(args):
@@ -49,7 +49,7 @@ def get_user(args):
         return user
 
     except KeyError:
-        raise CustomException("No such user: %s" % user)
+        raise CustomException(Errors.E048 % user)
 
 def check_zipapp():
     """Checks access to the dbcollect zipapp package"""
@@ -73,7 +73,7 @@ def drop_user(user):
         groups = [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
     except KeyError:
-        raise CustomException("User %s not available" % user)
+        raise CustomException(Errors.E048 % user)
 
     if uid == 0:
         raise CustomException('Root not allowed')

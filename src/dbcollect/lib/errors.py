@@ -109,6 +109,7 @@ class Errors():
     E045 = "[DBC-E045] Timeout on sending root tasks (Queue Full)"
     E046 = "[DBC-E046] Timeout on receiving root tasks (Queue Empty)"
     E047 = "[DBC-E047] Timeout on waiting for collector, cannot send root tasks"
+    E048 = "[DBC-E048] No such user: %s"
 
 class ErrorHelp():
     @classmethod
@@ -264,3 +265,4 @@ class ErrorHelp():
     E045 =  "The process that runs tasks as root could not send the task results to the receiver. This should not happen and indicates a bug or other problem"
     E046 =  "No more task results could be received but the sender did not complete successfully. Can be a side effect of a long running (root) process."
     E047 =  "Some subprocess took a long time causing the collector to timeout. Check the logfile."
+    E048 =  "When called by root, dbcollect tried to switch to a non-existing user (specified by --user option). Try a different user."

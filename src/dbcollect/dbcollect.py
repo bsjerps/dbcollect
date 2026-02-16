@@ -12,7 +12,7 @@ try:
     check_python_version()
 
     from lib.config import versioninfo
-    from lib.errors import ErrorHelp, DBWorkerFailed
+    from lib.errors import ErrorHelp, DBWorkerFailed, CustomException
     from lib.jsonfile import buildinfo
     from modules.collector import collect_wrapper
     from modules.updater import update
@@ -106,6 +106,9 @@ def main():
 
         except KeyboardInterrupt:
             logging.critical('Aborted')
+
+        except CustomException as e:
+            logging.critical(e)
 
         except DBWorkerFailed as e:
             logging.debug(e)
