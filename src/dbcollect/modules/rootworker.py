@@ -73,6 +73,9 @@ def get_accounting(args, rootqueue):
 
     try:
         # Test if "sa" command exists
+        if not os.path.isfile('/usr/bin/sa'):
+            logging.debug('sa executable not found, skipping process accounting')
+            return
         execute('sa -V')
 
     except OSError as e:

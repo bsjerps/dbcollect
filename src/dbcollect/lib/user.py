@@ -40,7 +40,7 @@ def _get_user(args):
 def get_user(args):
     """Get the username to run dbcollect with"""
 
-    # Get required username 
+    # Get required username
     user = _get_user(args)
 
     # Check if the user exists
