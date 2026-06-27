@@ -55,7 +55,7 @@ def collect_wrapper(args):
             logging.info('Calling user is {0}'.format(username()))
 
         except IOError as e:
-            logging.critical(Errors.E007, DBCOLLECT_LOG, strerror(e.errno))
+            logging.critical(Errors.E014, DBCOLLECT_LOG, strerror(e.errno))
             return
 
         # run dbcollect workers

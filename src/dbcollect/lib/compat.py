@@ -145,7 +145,7 @@ def popen(cmd, **kwargs):
     if sys.version_info[0] == 2:
         return Popen(cmd, **kwargs)
 
-    return Popen(cmd, encoding='utf-8', **kwargs)
+    return Popen(cmd, encoding='utf-8', errors='replace', **kwargs)
 
 def get_pkg_resource(package, resource):
     """Get a file from the zipapp package (such as an SQL script)"""
@@ -199,7 +199,7 @@ def execute(cmd, timeout=None, **kwargs):
         stdout, stderr = proc.communicate()
 
     else:
-        proc = Popen(command, env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf-8')
+        proc = Popen(command, env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf-8', errors='replace')
         stdout, stderr = proc.communicate(timeout=timeout)
 
     return Completed(stdout, stderr, proc.returncode)

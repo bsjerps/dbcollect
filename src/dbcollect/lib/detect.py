@@ -197,7 +197,7 @@ def get_instances(args):
         for connectstring in re.findall(r'^(\w+\/\S+@\S+/\S+)', connects, re.M):
             r = re.match(r'^\w+\/\S+@\S+/(\S+)', connectstring)
             if not r:
-                raise CustomException(Errors.E043 % args.connect)
+                raise CustomException(Errors.E043 % args.logons)
 
             sid = r.group(1)
             orahome = try_connect(args, sid, connectstring)

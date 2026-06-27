@@ -19,7 +19,7 @@ email    = execute('git config --global user.email')
 progname = 'dbcollect'
 
 def makebuildinfo():
-    print(f"Creating buildinfo")
+    print("Creating buildinfo")
     buildinfo = {}
     buildinfo['builddate'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     buildinfo['branch']    = execute('git branch --show-current')
@@ -29,7 +29,7 @@ def makebuildinfo():
     buildinfo['buildhash'] = execute('git rev-parse --verify HEAD')
     buildinfo['shorthash'] = execute('git rev-parse --short HEAD')
 
-    with open(os.path.join(gitdir, 'src/dbcollect/lib', 'buildinfo.py'), 'w') as f:
+    with open(os.path.join(gitdir, 'src/dbcollect/lib', 'buildinfo.py'), 'w', encoding='utf-8') as f:
         f.write('buildinfo = ')
         json.dump(buildinfo, f, indent=2)
         f.write('\n')
@@ -38,9 +38,9 @@ def makeapp(args):
     print(f"Creating {progname}")
     srcpath = os.path.join(gitdir, 'src', progname)
     tgtpath = os.path.join(args.destdir, progname)
-    r = run(['find', srcpath, '-name', '__pycache__'], capture_output=True, encoding='utf-8')
+    r = run(['find', srcpath, '-name', '__pycache__'], capture_output=True, encoding='utf-8', check=True)
     for cachedir in r.stdout.splitlines():
-        run(['/usr/bin/rm','-r', cachedir])
+        run(['/usr/bin/rm','-r', cachedir], check=True)
     print(f"Writing {tgtpath}")
     run(['python3', '-m', 'zipapp', '--output', tgtpath,  '--main', 'dbcollect:main', '--python', '/usr/bin/env python', srcpath], check=True)
 
