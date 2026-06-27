@@ -22,6 +22,12 @@ try:
 except ImportError:
     from xml.etree import ElementTree as etree
 
+try:
+    ParseError = etree.ParseError
+except AttributeError:
+    from xml.parsers.expat import ExpatError
+    ParseError = (ExpatError, SyntaxError)
+
 def awrstrip(path, out=None, inplace=False):
     """Strip a html formatted AWR report from sections containing SQL text.
     The ADDM report is also removed as it also often contains SQL code.
@@ -42,7 +48,7 @@ def awrstrip(path, out=None, inplace=False):
     try:
         tree = etree.parse(path)
 
-    except etree.ParseError:
+    except ParseError:
         logging.error(Errors.E006, path)
         return
 
