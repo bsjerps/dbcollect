@@ -182,6 +182,12 @@ class JSONPlusCommand(JSONPlus):
             self.errors             = strerror(e.errno)
             self.info['returncode'] = None
 
+        except Exception as e: # pylint: disable=broad-exception-caught
+            logging.debug('Error on %s: %s', cmd, e)
+            self.info['status']     = 'ERROR'
+            self.errors             = str(e)
+            self.info['returncode'] = None
+
 class JSONPlusFile(JSONPlus):
     def __init__(self, path, progress=None):
         JSONPlus.__init__(self)
