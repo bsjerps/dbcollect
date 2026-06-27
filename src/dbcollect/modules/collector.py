@@ -81,7 +81,7 @@ def collect_wrapper(args):
             raise DBWorkerFailed('DB Worker failed, rc=%s' % proc_dbc.exitcode)
 
     except KeyboardInterrupt:
-        logging.fatal(Errors.E002)
+        logging.critical(Errors.E002)
 
 def get_root_tasks(archive, exchange):
     """

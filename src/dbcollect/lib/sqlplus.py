@@ -37,7 +37,7 @@ def sqlplus(orahome, sid, connectstring, tmpdir, quiet=False, timeout=None):
             logging.debug('Timeout not detected')
 
     if quiet:
-        stdout = open('/dev/null', 'wb')
+        stdout = open(os.devnull, 'w')  # pylint: disable=unspecified-encoding
     else:
         stdout = PIPE
 
