@@ -29,26 +29,30 @@ def parse_pacct(args, path):
     fileinfo = FileInfo(path)
     jpcmd.set('fileinfo', fileinfo.dict)
 
-    #if path.endswith('.gz'):
     if fileinfo.is_gzip:
         gunzip  = ['gunzip', '-d', '-c', path]
         sa      = ['sa', '-a', '-b', '-j', '-']
         jpcmd.set('convert', ' '.join(gunzip))
         jpcmd.set('command', ' '.join(sa))
 
-        p1   = Popen(gunzip, stdout=PIPE, stderr=PIPE)
-        proc = Popen(sa, stdin=p1.stdout, stdout=PIPE, stderr=PIPE)
+        proc_gzip = Popen(gunzip, stdout=PIPE, stderr=PIPE)
+        proc_sa   = Popen(sa, stdin=proc_gzip.stdout, stdout=PIPE, stderr=PIPE)
+        proc_gzip.stdout.close()
 
-        _, ge = p1.communicate()
-        if p1.returncode:
+        out, err = proc_sa.communicate()
+        ge = proc_gzip.stderr.read()
+        proc_gzip.wait()
+        if proc_gzip.returncode:
             jpcmd.errors = decode(ge)
+        proc = proc_sa
 
     else:
         sa   = ['sa', '-a', '-b', '-j', path]
         jpcmd.set('command', ' '.join(sa))
         proc = Popen(sa, stdout=PIPE, stderr=PIPE)
 
-    out, err = proc.communicate()
+        out, err = proc.communicate()
+
     jpcmd.set('returncode', proc.returncode)
     if err:
         jpcmd.set('status', 'ERROR')
