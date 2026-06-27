@@ -161,7 +161,7 @@ class JSONPlusCommand(JSONPlus):
             if progress:
                 progress.message(msg)
 
-            completed = execute(cmd, timeout=10, **kwargs)
+            completed = execute(cmd, timeout=60, **kwargs)
             self.data   = completed.stdout
             self.errors = completed.stderr
             self.info['returncode'] = completed.returncode

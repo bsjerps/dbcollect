@@ -5,8 +5,8 @@ License: GPLv3+
 """
 
 DBCOLLECT_LOG     = '/tmp/dbcollect.log'
-ROOTQUEUE_TIMEOUT = 10 # must be lower than the workqueue timeout
-WORKQUEUE_TIMEOUT = 20 # must be higher than the rootqueue timeout
+ROOTQUEUE_TIMEOUT = 10  # must be lower than the workqueue timeout
+WORKQUEUE_TIMEOUT = 120 # must exceed max OS command timeout (60s)
 
 versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
