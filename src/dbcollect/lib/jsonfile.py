@@ -4,7 +4,7 @@ Copyright (c) 2025 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
-import sys, os, platform, logging, json, time, pwd
+import sys, os, platform, logging, time, pwd
 from datetime import datetime
 
 try:
@@ -17,7 +17,7 @@ except ImportError:
 from lib.errors import Errors
 from lib.user import username, usergroup, usergroups, getuser, getgroup
 from lib.config import versioninfo
-from lib.compat import load_file, write_file, strerror, execute, TimeoutExpired
+from lib.compat import load_file, write_file, strerror, execute, TimeoutExpired, dump_json
 
 def get_timestamp(ts):
     """Workaround for strftime() not working (HP-UX)"""
@@ -99,7 +99,7 @@ class JSONPlus():
 
     def dump(self):
         """Return the data as JSON text"""
-        return json.dumps(self.info, indent=2)
+        return dump_json(self.info)
 
     def save(self, path):
         """Save self as jsonp file"""
@@ -109,7 +109,7 @@ class JSONPlus():
         """Return the data as JSONPlus"""
         if self.errors:
             self.info['errors'] = self.errors.splitlines()
-        data = json.dumps(self.info, indent=2)
+        data = dump_json(self.info)
         if self.data:
             data += '\n'
             data += self.data

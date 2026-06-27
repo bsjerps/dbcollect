@@ -6,7 +6,7 @@ License: GPLv3+
 
 # pylint: disable=unspecified-encoding,consider-using-with,unused-import,ungrouped-imports,too-few-public-methods
 
-import sys, os, re, errno, logging, time
+import sys, os, re, errno, logging, time, json
 from pkgutil import get_data
 from subprocess import Popen, PIPE
 
@@ -165,6 +165,13 @@ def strerror(_errno):
         return os.strerror(_errno)
 
     return 'Unknown Error'
+
+def dump_json(obj):
+    """Serialize obj to a JSON string. Pretty-print on Python 2.7+ and 3.x (indent unsupported on 2.6)."""
+    if sys.version_info[0] >= 3 or sys.version_info >= (2, 7):
+        return json.dumps(obj, indent=2)
+
+    return json.dumps(obj)
 
 def decode(buf):
     """decode binary data into text. Decoding errors are only handled on Python3"""
