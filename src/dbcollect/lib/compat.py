@@ -191,6 +191,9 @@ def execute(cmd, timeout=None, **kwargs):
     """
 
     command = cmd.split(' ')
+
+    # Intentionally do not inherit environment variables.
+    # This makes collection predictable and consistent.
     env = {}
     env.update(kwargs)
 

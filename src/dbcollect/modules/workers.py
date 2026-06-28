@@ -11,7 +11,7 @@ except ImportError:
     from Queue import Full
 
 from lib.errors import Errors, SQLError, SQLTimeout
-from lib.compat import Progress, load_file, get_pkg_resource
+from lib.compat import Progress, load_file, get_pkg_resource, Empty
 from lib.config import dbinfo_config
 from lib.jsonfile import JSONPlusDBInfo
 from lib.log import exception_handler
@@ -187,18 +187,18 @@ def job_processor(shared, n):
     name = 'Worker {0}'.format(n)
 
     while True:
-        if shared.jobs.empty() and shared.done.is_set():
-            # Break the loop if job producer is done AND queue is empty
-            break
-
-        # Get the next job and run it
-        job = shared.jobs.get(timeout=10)
+        try:
+            job = shared.jobs.get(timeout=10)
+        except Empty:
+            if shared.done.is_set():
+                break
+            continue
 
         try:
             elapsed, rc, status, spoolfile = session.run(name, job.query, job.filename)
         except (SQLError, SQLTimeout) as e:
             logging.error(*e.args)
-            break
+            sys.exit(20)
 
         # Move the completed AWR/SP file to the awr dir
         tgtfile = os.path.join(shared.tempdir, 'awr', job.filename)

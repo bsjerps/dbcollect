@@ -40,7 +40,7 @@ def oracle_info(archive, args):
         lspatches_cmd = '{0} lspatches'.format(os.path.join(orahome, 'OPatch/opatch'))
         listener_cmd  = '{0} status'.format(os.path.join(orahome, 'bin/lsnrctl'))
 
-        jp = JSONPlusCommand(args, cmd=lspatches_cmd)
+        jp = JSONPlusCommand(args, cmd=lspatches_cmd, ORACLE_HOME=orahome)
         archive.writestr('oracle/orahome_{0}/lspatches.jsonp'.format(i+1), jp.jsonp())
 
         # Get Listener services
