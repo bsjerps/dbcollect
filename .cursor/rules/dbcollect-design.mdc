@@ -23,9 +23,15 @@ When reviewing, auditing, or hunting bugs in this repo, treat the following as i
 
 ## Privileged OS commands
 
-- Linux root-only commands run via `rootworker` (`modules/rootworker.py`), not via `sudo` in `execute()`.
+- Linux root-only commands run via rootworker (modules/rootworker.py), not via sudo in execute().
 - Do not add or restore a `sudo` parameter on `JSONPlusCommand` / `execute()`.
 - HP-UX "rootcommands" use absolute paths from `hpux_config`; they run as the dropped user.
+
+## Worker join() without timeout (modules/collector.py)
+
+- proc_dbc.join() has **no timeout** — collection can run for hours (large AWR workloads).
+- A hung worker is aborted by the user with **Ctrl-C** (`KeyboardInterrupt` → **E002**).
+- Do not add `WORKER_TIMEOUT`, `--worker-timeout`, or `terminate()` on the dbcollect worker.
 
 ## Already fixed (do not re-suggest)
 

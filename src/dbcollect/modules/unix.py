@@ -7,7 +7,7 @@ License: GPLv3+
 import os, logging
 
 from lib.errors import Errors
-from lib.compat import load_file, listdir
+from lib.compat import listdir
 from lib.jsonfile import JSONPlusDirectories, JSONPlusCommand
 
 def nmon_info(archive, args):
@@ -22,8 +22,9 @@ def nmon_info(archive, args):
             continue
         for file in listdir(nmondir):
             path = os.path.join(nmondir, file)
-            data = load_file(path)
-            if data[:12] != 'AAA,progname':
+            with open(path, 'rb') as f:
+                header = f.read(12)
+            if header != b'AAA,progname':
                 logging.error(Errors.E025, path)
                 continue
             archive.store(path)

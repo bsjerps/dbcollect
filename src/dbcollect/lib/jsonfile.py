@@ -215,8 +215,7 @@ class JSONPlusFile(JSONPlus):
             self.errors = strerror(e.errno)
 
         except Exception as e: # pylint: disable=broad-exception-caught
-            self.info['status'] = 'ERROR'
-            self.info['status'] = 'Critical Error'
+            self.info['status'] = 'CRITICAL'
             logging.critical(Errors.E015, path, e)
 
 class JSONPlusDBInfo(JSONPlus):

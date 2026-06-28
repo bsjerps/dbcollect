@@ -127,7 +127,10 @@ def get_linux_config(archive):
             if completed.returncode != 0:
                 info['{0}_error'.format(cmd)] = { 'command': cmd, 'stdout': completed.stdout, 'stderr': completed.stderr, 'rc': completed.returncode }
             if cmd == 'sestatus':
-                out = completed.stdout.split()[-1]
+                try:
+                    out = completed.stdout.split()[-1]
+                except IndexError:
+                    raise CustomException(Errors.E001 % 'sestatus')
                 info[cmd] = out.strip()
 
         except OSError as e:

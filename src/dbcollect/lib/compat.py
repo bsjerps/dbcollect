@@ -187,7 +187,7 @@ def execute(cmd, timeout=None, **kwargs):
     """
     Run a command, and return a Completed object.
     kwargs are added to the environment variables (i.e. if ORACLE_HOME needs to be set)
-    Timeout only works on Python 3 (otherwise ignore)
+    On Python 2, timeout requires GNU timeout (/usr/bin/timeout).
     """
 
     command = cmd.split(' ')
@@ -205,11 +205,21 @@ def execute(cmd, timeout=None, **kwargs):
     env['UNIX95'] = 'true'
 
     if sys.version_info[0] == 2:
+        if timeout is not None and os.path.isfile('/usr/bin/timeout'):
+            command = ['timeout', str(timeout)] + command
+        elif timeout is not None:
+            logging.debug('Timeout ignored on Python 2 without /usr/bin/timeout')
         proc = Popen(command, env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
+        if timeout is not None and proc.returncode == 124:
+            raise TimeoutExpired(cmd, timeout)
 
     else:
         proc = Popen(command, env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE, encoding='utf-8', errors='replace')
-        stdout, stderr = proc.communicate(timeout=timeout)
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout)
+        except TimeoutExpired:
+            proc.kill()
+            raise
 
     return Completed(stdout, stderr, proc.returncode)
