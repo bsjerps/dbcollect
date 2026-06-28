@@ -1,0 +1,35 @@
+---
+description: Intentional dbcollect design decisions — do not report as bugs
+alwaysApply: true
+---
+
+# dbcollect — design intent
+
+When reviewing, auditing, or hunting bugs in this repo, treat the following as intentional unless there is new evidence of actual failure.
+
+## Subprocess environment (`lib/compat.py`, `lib/sqlplus.py`)
+
+- `execute()` and `sqlplus()` build a **minimal env** and **do not inherit `os.environ`**.
+- Goal: predictable, reproducible collection independent of the caller's shell.
+- Per-command Oracle vars are passed explicitly via kwargs (e.g. `ORACLE_HOME=orahome` in `JSONPlusCommand`).
+- `ORACLE_BASE` and similar are not required in the shell env; instance metadata comes from SQL*Plus / the database.
+
+## ZIP output vs `--tempdir` (`lib/archive.py`)
+
+- `--tempdir` is for **scratch work** during collection (spool files, `dbinfo/`, `awr/`, logs).
+- The final ZIP defaults under `/tmp` with name `dbcollect-<hostname>-<timestamp>.zip`.
+- Use `--filename` to customize output; an **absolute path** (e.g. `/var/tmp/out.zip`) writes outside `/tmp`.
+- Do not suggest wiring `--tempdir` to the ZIP destination.
+
+## Privileged OS commands
+
+- Linux root-only commands run via `rootworker` (`modules/rootworker.py`), not via `sudo` in `execute()`.
+- Do not add or restore a `sudo` parameter on `JSONPlusCommand` / `execute()`.
+- HP-UX "rootcommands" use absolute paths from `hpux_config`; they run as the dropped user.
+
+## Already fixed (do not re-suggest)
+
+- **AWR worker queue**: `job_processor` catches `queue.Empty` and only exits when `shared.done` is set (`modules/workers.py`).
+- **AWR worker failures**: `SQLError` / `SQLTimeout` in `job_processor` call `sys.exit(20)` so `oracle.py` raises `E039`.
+- **Updater imports**: Python 3 imports `HTTPError` / `URLError` from `urllib.error` (`modules/updater.py`).
+- **Oracle home commands**: `lspatches` and `lsnrctl` both pass `ORACLE_HOME` via kwargs (`modules/oracle.py`).
