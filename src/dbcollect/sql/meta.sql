@@ -9,7 +9,7 @@ SET SERVEROUTPUT ON
 SET tab off feedback off verify off heading on lines 9999 pages 50000 trims on
 
 ALTER SESSION SET nls_date_format='YYYY-MM-DD HH24:MI:SS';
-WHENEVER SQLERROR EXIT 0
+WHENEVER SQLERROR EXIT SQL.SQLCODE
 
 DECLARE
 	v_status    VARCHAR(100);

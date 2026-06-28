@@ -111,7 +111,7 @@ def hpux_info(archive, args):
         archive.writestr('cmd/{0}.jsonp'.format(tag), df.jsonp())
 
     for tag, cmd in hpux_config['rootcommands'].items():
-        df = JSONPlusCommand(args, cmd=cmd, sudo=True)
+        df = JSONPlusCommand(args, cmd=cmd)
         archive.writestr('cmd/{0}.jsonp'.format(tag), df.jsonp())
 
     for file in hpux_config['files']:
@@ -130,7 +130,7 @@ def hpux_info(archive, args):
     for dev in disks:
         disk = os.path.basename(dev)
         cmd = '/usr/sbin/diskinfo {0}'.format(dev)
-        diskinfo = JSONPlusCommand(args, cmd=cmd, sudo=True)
+        diskinfo = JSONPlusCommand(args, cmd=cmd)
         archive.writestr('cmd/diskinfo_{0}.jsonp'.format(disk), diskinfo.jsonp())
 
     sar_info(archive, args)

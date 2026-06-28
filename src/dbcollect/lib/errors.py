@@ -61,6 +61,7 @@ class Errors():
     W015 = "[DBC-W015] Using only connectstrings (skipping local instances detection)"
     W016 = "[DBC-W016] %s: (%s) SQL*Plus Error %s, %s"
     W017 = "[DBC-W017] %s: Oracle not available (ORA-01034), skipping %s"
+    W018 = "[DBC-W018] %s: OSDBA group %s from config.c not found"
 
     E001 = "[DBC-E001] Unknown error: %s, see logfile for debug info"
     E002 = "[DBC-E002] Keyboard interrupt, Aborting..."
@@ -160,6 +161,9 @@ class ErrorHelp():
     W015 =  "No instance detection will be used, so dbcollect will skip any running instance that is not in the logons file."
     W016 =  "SQL*Plus returned an error when trying to connect. The next ORACLE_HOME will be attempted if available."
     W017 =  "This usually happens if the database is down (when using logins), or in the process of starting or shutting down, or when using the incorrect ORACLE_HOME."
+    W018 =  "The OSDBA group name from ORACLE_HOME/rdbms/lib/config.c does not exist on this host.\n\n" \
+            "This often indicates the wrong ORACLE_HOME is being tried. DBCollect will continue with the next candidate.\n\n" \
+            "Solution:\n\nVerify oratab, inventory, or use --orahome to specify the correct ORACLE_HOME."
 
     E001 =  "This indicates an unexpected error in DBCollect due to a bug.\nSolution: Unknown, submit the logfile for debugging."
     E002 =  "DBCollect has been aborted, usually due to CTRL-C (cancel) keyboard sequence.\nSolution: restart dbcollect with the correct parameters."

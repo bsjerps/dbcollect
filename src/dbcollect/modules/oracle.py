@@ -12,7 +12,7 @@ from lib.errors import Errors, CustomException
 from lib.detect import get_instances
 from lib.multiproc import Shared, Tempdir
 from lib.jsonfile import JSONPlusCommand
-from lib.compat import Progress
+from lib.compat import Progress, Empty
 from .awrstrip import awrstrip
 from .instance import Instance
 from .workers import job_generator, job_processor, info_processor
@@ -117,9 +117,11 @@ def oracle_info(archive, args):
         logging.info('%s: Workers completed', instance.sid)
 
         # Clean hanging jobs
-        while not shared.jobs.empty():
-            _ = shared.jobs.get()
-            time.sleep(0.001)
+        while True:
+            try:
+                shared.jobs.get_nowait()
+            except Empty:
+                break
 
         logging.debug('%s: Waiting for job generator', instance.sid)
         generator.join()

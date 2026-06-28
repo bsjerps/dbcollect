@@ -38,6 +38,7 @@ def run_sql(args):
 
     if not args.script in scriptlist:
         logging.error('Script %s does not exist', args.script)
+        return
 
     try:
         header = get_pkg_resource('sql', 'dbinfo/header.sql')

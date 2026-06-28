@@ -77,9 +77,13 @@ def check_dba_group(sid, orahome):
     dba_group   = r.group(1)
     user        = pwd.getpwuid(os.getuid()).pw_name
     user_groups = os.getgroups()
-    user_gid    = grp.getgrnam(dba_group).gr_gid
+    try:
+        user_gid = grp.getgrnam(dba_group).gr_gid
+    except KeyError:
+        logging.warning(Errors.W018, sid, dba_group)
+        return
 
-    if not user_gid in user_groups:
+    if user_gid not in user_groups:
         logging.warning(Errors.W011, sid, user, dba_group)
 
 def check_orahome(orahome):

@@ -46,7 +46,7 @@ def main():
     parser.add_argument(      "--complete",   action="store_true",        help="Bash completions. Run \"source <(dbcollect --complete)\"")
     parser.add_argument(      "--update",     action="store_true",        help="Check for updates")
     parser.add_argument("-u", "--user",       type=str,                   help="Switch to user (if run as root)")
-    parser.add_argument(      "--filename",   type=str,                   help="output filename, default dbcollect-<hostname>-<timestamp>.zip")
+    parser.add_argument(      "--filename",   type=str,                   help="output filename or full file path, default dbcollect-<hostname>-<timestamp>.zip")
     parser.add_argument(      "--cleanup",    action="store_true",        help="Remove old dbcollect zipfiles from /tmp")
     parser.add_argument(      "--tempdir",    type=str, default='/tmp',   help="TEMP directory, default /tmp")
     parser.add_argument("-d", "--days",       type=int, default=10,       help="Number of days ago to START collect of AWR data (default 10, max 999)")

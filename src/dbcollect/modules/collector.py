@@ -27,8 +27,11 @@ class Exchange():
 
     def drain(self):
         # Empties the queue to prevent hanging on join()
-        while self.queue.empty() is False:
-            self.queue.get()
+        while True:
+            try:
+                self.queue.get_nowait()
+            except Empty:
+                break
 
 def collect_wrapper(args):
     """

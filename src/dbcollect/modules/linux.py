@@ -9,7 +9,7 @@ License: GPLv3+
 import os, re, stat, logging
 
 from lib.config import linux_config
-from lib.errors import Errors
+from lib.errors import Errors, CustomException
 from lib.user import getuser, getgroup
 from lib.jsonfile import JSONPlus, JSONPlusDirectories, JSONPlusCommand, JSONPlusFile
 from lib.compat import Progress, load_file, execute, listdir
@@ -198,7 +198,10 @@ def get_linux_commands(args, archive):
     """Run the non-root commands for the OS specified in the config"""
 
     lsblk = execute('lsblk -V')
-    lsblk_version = (lsblk.stdout).split()[-1]
+    try:
+        lsblk_version = lsblk.stdout.split()[-1]
+    except IndexError:
+        raise CustomException(Errors.E001 % 'lsblk -V')
 
     progress = Progress(args)
 

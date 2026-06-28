@@ -7,6 +7,7 @@ try:
     from urllib2 import urlopen, Request, HTTPError, URLError
 except ImportError:
     from urllib.request import Request, urlopen
+    from urllib.error import HTTPError, URLError
 
 import os, sys, json, logging
 from shutil import move
